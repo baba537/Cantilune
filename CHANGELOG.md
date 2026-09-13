@@ -1,22 +1,22 @@
 # Changelog
 
-Alle nennenswerten Änderungen an Cantilune. Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
+All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.0.0] – 2026-09-14
 
-Erste öffentliche Version.
+First public release.
 
-### Funktionen
-- 30 Situationen in sechs Kategorien mit jeweils mehreren Presets, definiert in `catalog/presets.json`
-- Eine Playlist pro Situation, die täglich ersetzt wird
-- Auswahl-Modi: Ausgewogen, Lieblingssongs, Entdecken, Neu hinzugefügt
-- Gewichtete Auswahl anhand von Genre, Jahr, BPM (inklusive halber und doppelter Werte), ReplayGain, Mood, Bewertung, Wiedergaben und Hinzufügedatum
-- Tolerante Genre-Erkennung mit Vorschlägen für fehlende Genres im Log
-- Obergrenze pro Künstler sowie Filter für Länge, Intros und explizite Inhalte
-- Energie-Verlauf je Situation: zufällig, ansteigend oder abklingend
-- Verlauf der letzten Tage im KVStore, damit sich Playlists selten wiederholen
-- Eigene Situationen mit frei wählbaren Filtern
-- Zeitplan per Uhrzeit oder Cron-Ausdruck, sofortige Aktualisierung nach dem Speichern
-- Option zum Löschen aller erzeugten Playlists vor der Deinstallation
+### Features
+- 30 situations in six categories, each with several presets, defined in `catalog/presets.json`
+- One playlist per situation, replaced every day
+- Selection modes: balanced, favorites, discover, recently added
+- Weighted selection based on genre, year, BPM (including half and double values), ReplayGain, mood, rating, play count and date added
+- Tolerant genre matching with suggestions for missing genres in the log
+- Per-artist limit and filters for duration, intros and explicit content
+- Energy flow per situation: random, rising or falling
+- History of recent days in the key-value store to reduce repeats
+- Custom situations with user-defined filters
+- Schedule by time of day or cron expression, with immediate update after saving
+- Option to delete all generated playlists before uninstalling
 
 [1.0.0]: https://github.com/baba537/Cantilune/releases/tag/v1.0.0

@@ -39,9 +39,9 @@ jobs:
           version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" 'index($0, "## [" v "]") == 1 {found=1; next} /^## \[/ {found=0} found' CHANGELOG.md > dist/release-notes.md
           if [ ! -s dist/release-notes.md ]; then
-            echo "Keine Einträge im Changelog für $version." > dist/release-notes.md
+            echo "No changelog entries for $version." > dist/release-notes.md
           fi
-          printf '\n---\n\n**Installation:** `cantilune.ndp` herunterladen und in den Plugin-Ordner von Navidrome kopieren. Details im [README](%s/%s#installation).\n' \
+          printf '\n---\n\n**Installation:** download `cantilune.ndp` and copy it into the Navidrome plugin folder. See the [README](%s/%s#installation) for details.\n' \
             "${{ github.server_url }}" "${{ github.repository }}" >> dist/release-notes.md
           cat dist/release-notes.md
 

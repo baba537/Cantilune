@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Navidrome-Dokumentation
+  - name: Navidrome documentation
     url: https://www.navidrome.org/docs/
-    about: Allgemeine Fragen zu Navidrome und zur Plugin-Konfiguration
+    about: General questions about Navidrome and plugin configuration
