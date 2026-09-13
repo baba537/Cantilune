@@ -7,9 +7,9 @@ import (
 	"github.com/navidrome/navidrome/plugins/pdk/go/pdk"
 )
 
-// Der Verlauf merkt sich pro Situation und Tag, welche Songs in der Playlist
-// waren (KVStore-Schlüssel "hist:<situation>:<YYYY-MM-DD>", läuft per TTL ab).
-// So wiederholen sich Playlists auch über mehrere Tage hinweg kaum.
+// The history stores which songs were in the playlist per situation and day
+// (key-value store key "hist:<situation>:<YYYY-MM-DD>", expiring via TTL),
+// so playlists rarely repeat across several days.
 const (
 	historyPrefix = "hist:"
 	dateLayout    = "2006-01-02"
@@ -19,7 +19,7 @@ func historyKey(situationID string, t time.Time) string {
 	return historyPrefix + situationID + ":" + t.UTC().Format(dateLayout)
 }
 
-// loadHistory liefert Song-ID → Alter in Tagen (0 = heute, 1 = gestern, …).
+// loadHistory returns song ID → age in days (0 = today, 1 = yesterday, …).
 func (g *generator) loadHistory(situationID string) map[string]int {
 	recent := map[string]int{}
 	if g.cfg.HistoryDays <= 0 {
@@ -27,7 +27,7 @@ func (g *generator) loadHistory(situationID string) map[string]int {
 	}
 	keys, err := kvList(historyPrefix + situationID + ":")
 	if err != nil {
-		logf(pdk.LogWarn, "Verlauf für %q nicht lesbar: %v", situationID, err)
+		logf(pdk.LogWarn, "could not read history for %q: %v", situationID, err)
 		return recent
 	}
 	if len(keys) == 0 {
@@ -35,7 +35,7 @@ func (g *generator) loadHistory(situationID string) map[string]int {
 	}
 	values, err := kvGetMany(keys)
 	if err != nil {
-		logf(pdk.LogWarn, "Verlauf für %q nicht lesbar: %v", situationID, err)
+		logf(pdk.LogWarn, "could not read history for %q: %v", situationID, err)
 		return recent
 	}
 	today := truncateDay(nowFn())
@@ -63,11 +63,11 @@ func (g *generator) saveHistory(situationID string, songIDs []string) {
 	}
 	ttl := int64(g.cfg.HistoryDays+1) * int64(day/time.Second)
 	if err := kvSetTTL(historyKey(situationID, nowFn()), []byte(strings.Join(songIDs, "\n")), ttl); err != nil {
-		logf(pdk.LogWarn, "Verlauf für %q konnte nicht gespeichert werden: %v", situationID, err)
+		logf(pdk.LogWarn, "could not save history for %q: %v", situationID, err)
 	}
 }
 
-// repeatFactor wertet kürzlich verwendete Songs ab – je frischer, desto stärker.
+// repeatFactor weights down recently used songs; the more recent, the stronger.
 func repeatFactor(ageDays int) float64 {
 	switch {
 	case ageDays <= 1:

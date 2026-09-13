@@ -14,7 +14,7 @@ import (
 	"cantilune/catalog"
 )
 
-// Settings ist die vollständig aufgelöste Plugin-Konfiguration.
+// Settings is the fully resolved plugin configuration.
 type Settings struct {
 	Prefix           string
 	ShowPresetInName bool
@@ -34,7 +34,7 @@ type Settings struct {
 	Custom           []customSituation
 }
 
-// situationConfig ist die Web-UI-Zeile einer eingebauten Situation.
+// situationConfig is the web UI row of a built-in situation.
 type situationConfig struct {
 	Enabled    *bool  `json:"enabled"`
 	Preset     string `json:"preset"`
@@ -43,7 +43,7 @@ type situationConfig struct {
 	TargetUser string `json:"targetUser"`
 }
 
-// customSituation ist eine selbst angelegte Situation.
+// customSituation is a user-defined situation.
 type customSituation struct {
 	Enabled         *bool    `json:"enabled"`
 	Name            string   `json:"name"`
@@ -63,12 +63,12 @@ type customSituation struct {
 	TargetUser      string   `json:"targetUser"`
 }
 
-// Job ist eine konkret zu erzeugende Playlist.
+// Job is a concrete playlist to generate.
 type Job struct {
-	ID          string // "gym" bzw. "custom-<name>"
+	ID          string // "gym" or "custom-<name>"
 	Title       string // "Gym"
-	PresetLabel string // "Hardstyle ⚡" (leer bei eigenen Situationen)
-	Name        string // vollständiger Playlist-Name
+	PresetLabel string // "Hardstyle ⚡" (empty for custom situations)
+	Name        string // full playlist name
 	Recipe      catalog.Recipe
 	Mode        string
 	Count       int
@@ -76,8 +76,8 @@ type Job struct {
 	Fingerprint string
 }
 
-// configSource liefert Rohwerte aus der Plugin-Konfiguration.
-// Navidrome speichert Strings unverändert, alle anderen Typen als JSON-Text.
+// configSource returns raw values from the plugin configuration.
+// Navidrome stores strings as-is and all other types as JSON text.
 type configSource func(key string) (string, bool)
 
 func (c configSource) lookup(key string) (string, bool) {
@@ -103,7 +103,7 @@ func (c configSource) Int(key string, def int) int {
 	if f, err := strconv.ParseFloat(v, 64); err == nil {
 		return int(f)
 	}
-	logf(pdk.LogWarn, "Einstellung %q: %q ist keine Zahl – verwende %d", key, v, def)
+	logf(pdk.LogWarn, "setting %q: %q is not a number, using %d", key, v, def)
 	return def
 }
 
@@ -115,24 +115,24 @@ func (c configSource) Bool(key string, def bool) bool {
 	if b, err := strconv.ParseBool(v); err == nil {
 		return b
 	}
-	logf(pdk.LogWarn, "Einstellung %q: %q ist kein Wahrheitswert – verwende %v", key, v, def)
+	logf(pdk.LogWarn, "setting %q: %q is not a boolean, using %v", key, v, def)
 	return def
 }
 
-// JSON parst einen JSON-Wert; liefert false, wenn er fehlt oder ungültig ist.
+// JSON parses a JSON value; it returns false if the value is missing or invalid.
 func (c configSource) JSON(key string, target any) bool {
 	v, ok := c.lookup(key)
 	if !ok || v == "" {
 		return false
 	}
 	if err := json.Unmarshal([]byte(v), target); err != nil {
-		logf(pdk.LogError, "Einstellung %q ist ungültig (%v) – verwende Standardwerte", key, err)
+		logf(pdk.LogError, "setting %q is invalid (%v), using defaults", key, err)
 		return false
 	}
 	return true
 }
 
-// loadSettings liest und normalisiert die komplette Konfiguration.
+// loadSettings reads and normalizes the complete configuration.
 func loadSettings(src configSource, cat *catalog.Catalog) Settings {
 	s := Settings{
 		Prefix:           src.String(catalog.KeyPrefix, catalog.DefaultPrefix),
@@ -167,7 +167,7 @@ func loadSettings(src configSource, cat *catalog.Catalog) Settings {
 	return s
 }
 
-// buildJobs erzeugt für jede aktivierte Situation genau einen Job.
+// buildJobs creates exactly one job for each enabled situation.
 func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 	var jobs []Job
 	for _, sit := range cat.Situations {
@@ -181,7 +181,7 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 		}
 		preset, ok := sit.FindPreset(sc.Preset)
 		if !ok && sc.Preset != "" {
-			logf(pdk.LogWarn, "%s: Preset %q existiert nicht mehr – verwende %q", sit.Name, sc.Preset, sit.PresetLabel(preset))
+			logf(pdk.LogWarn, "%s: preset %q no longer exists, using %q", sit.Name, sc.Preset, sit.PresetLabel(preset))
 		}
 		variant := ""
 		if s.ShowPresetInName && !preset.Mix {
@@ -234,7 +234,7 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 	return jobs
 }
 
-// buildPlaylistName erzeugt z. B. "🎧 Gym Hardstyle ⚡".
+// buildPlaylistName builds names such as "🎧 Gym Hardstyle ⚡".
 func buildPlaylistName(prefix, situation, variant, emoji string) string {
 	parts := make([]string, 0, 4)
 	for _, p := range []string{prefix, situation, variant, emoji} {
@@ -245,7 +245,7 @@ func buildPlaylistName(prefix, situation, variant, emoji string) string {
 	return strings.Join(parts, " ")
 }
 
-// fingerprint erkennt, ob sich die Konfiguration einer Playlist geändert hat.
+// fingerprint detects whether the configuration of a playlist has changed.
 func fingerprint(j Job, s Settings) string {
 	data, _ := json.Marshal(struct {
 		Name, Mode, User string
@@ -260,23 +260,24 @@ func fingerprint(j Job, s Settings) string {
 	return fmt.Sprintf("%08x", h.Sum32())
 }
 
-// cronExpression bestimmt den Cron-Ausdruck aus Cron-Feld oder Uhrzeit.
+// cronExpression determines the cron expression from the cron field or the time of day.
 func cronExpression(s Settings) (string, error) {
 	if s.CronExpression != "" {
 		fields := strings.Fields(s.CronExpression)
 		if len(fields) != 5 {
-			return "", fmt.Errorf("Cron-Ausdruck %q muss genau 5 Felder haben (Minute Stunde Tag Monat Wochentag)", s.CronExpression)
+			return "", fmt.Errorf("cron expression %q must have exactly 5 fields (minute hour day month weekday)", s.CronExpression)
 		}
 		return strings.Join(fields, " "), nil
 	}
 	t, err := time.Parse("15:04", s.GenerationTime)
 	if err != nil {
-		return "", fmt.Errorf("Uhrzeit %q ist ungültig, erwartet HH:MM", s.GenerationTime)
+		return "", fmt.Errorf("time %q is invalid, expected HH:MM", s.GenerationTime)
 	}
 	return fmt.Sprintf("%d %d * * *", t.Minute(), t.Hour()), nil
 }
 
 func normalizeMode(m string) string {
+	m = catalog.Canonical(m)
 	for _, mode := range catalog.Modes {
 		if strings.EqualFold(strings.TrimSpace(m), mode) {
 			return mode
@@ -285,9 +286,9 @@ func normalizeMode(m string) string {
 	return catalog.ModeBalanced
 }
 
-// labelValue übersetzt eine Dropdown-Beschriftung ("energiegeladen") in den internen Wert ("high").
+// labelValue translates a dropdown label ("energetic") into the internal value ("high").
 func labelValue(labels map[string]string, v string) string {
-	v = strings.TrimSpace(v)
+	v = strings.TrimSpace(catalog.Canonical(v))
 	if internal, ok := labels[strings.ToLower(v)]; ok {
 		return internal
 	}

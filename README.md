@@ -20,17 +20,14 @@ The name combines *canticle* (song) and *lune* (French for moon).
 
 ```
 🎧 Gym Hardstyle ⚡
-🎧 Auto fahren 🚗
-🎧 Kochen Jazz & Soul 🎷
-🎧 Lernen Lo-Fi ☕
-🎧 Schlafen Ambient 🌌
+🎧 Driving 🚗
+🎧 Cooking Jazz & Soul 🎷
+🎧 Studying Lo-Fi ☕
+🎧 Sleep Ambient 🌌
 ```
 
 > [!NOTE]
 > Cantilune was developed with the help of Claude Opus 5 (Anthropic). The code is covered by automated tests but may still contain bugs. Please report problems and suggestions as an [issue](https://github.com/baba537/Cantilune/issues).
-
-> [!IMPORTANT]
-> The plugin's settings page, situation names and playlist names are currently in German. This README gives the German labels together with their meaning.
 
 ## Contents
 
@@ -50,7 +47,7 @@ The name combines *canticle* (song) and *lune* (French for moon).
 
 - 30 situations in six categories, each with several presets
 - One playlist per situation, replaced every day
-- Four selection modes: balanced, favorites, discover, recently added
+- Four selection modes: Balanced, Favorites, Discover, Recently added
 - Weighted selection based on genre, BPM, ReplayGain, mood, rating and listening history
 - Variety across several days and at most three songs per artist (configurable)
 - Tolerant genre matching, e.g. `Hip-Hop` = `Hip Hop`, and `Hardstyle` also finds `Euphoric Hardstyle`
@@ -96,35 +93,33 @@ The playlists are created about 15 seconds after saving. After that, they are re
 
 ## Settings
 
-The German label shown in the web UI is given in the first column.
-
-### General (*Allgemein*)
+### General
 
 | Setting | Default | Description |
 |---|---|---|
-| Präfix | `🎧` | Prefix for every playlist name |
-| Zielbenutzer | empty | Owner of the playlists; empty means the first permitted admin |
-| Tracks pro Playlist | `50` | 1 to 500, can be overridden per situation |
-| Playlists öffentlich machen | on | Playlists are visible to all users |
-| Preset im Namen anzeigen | on | `🎧 Gym Hardstyle ⚡` instead of `🎧 Gym ⚡` |
+| Prefix | `🎧` | Placed before every playlist name |
+| Owner | empty | User who owns the playlists; empty means the first permitted admin |
+| Tracks per playlist | `50` | 1 to 500, can be overridden per situation |
+| Make playlists public | on | Playlists are visible to all users |
+| Show preset in playlist name | on | `🎧 Gym Hardstyle ⚡` instead of `🎧 Gym ⚡` |
 
-### Schedule (*Zeitplan*)
+### Schedule
 
 | Setting | Default | Description |
 |---|---|---|
-| Uhrzeit | `04:00` | Daily generation time (server time) |
+| Time | `04:00` | Daily regeneration (server time) |
 | Cron | empty | Overrides the time, e.g. `30 5 * * 1-5` for weekdays at 05:30 |
-| Nach dem Speichern … sofort erstellen | on | Creates missing and changed playlists right after saving; unchanged ones stay until the next run |
+| Create missing or changed playlists right after saving | on | Unchanged playlists stay until the next scheduled run |
 
-### Selection (*Auswahl*)
+### Selection
 
 | Setting | Default | Description |
 |---|---|---|
-| Max. pro Künstler | `3` | Maximum songs per artist per playlist; `0` means unlimited |
-| Gehörtes meiden | `3` days | Recently played songs are picked less often |
-| Wiederholung meiden | `7` days | Songs from playlists of this period are picked less often |
-| Intros, Skits … überspringen | on | Skips tracks shorter than 2:30 with "Intro", "Skit", "Interlude" etc. in the title |
-| Genres nie verwenden | Audiobook, Podcast, Comedy, Christmas and more | Applies to all playlists unless a preset explicitly includes the genre |
+| Max. per artist | `3` | Maximum songs per artist per playlist; `0` means unlimited |
+| Avoid played | `3` days | Recently played songs are picked less often |
+| Avoid repeats | `7` days | Songs from playlists of this period are picked less often |
+| Skip short intros, skits and interludes | on | Skips tracks shorter than 2:30 with "Intro", "Skit", "Interlude" etc. in the title |
+| Never use these genres | Audiobook, Podcast, Comedy, Christmas and more | Applies to all playlists unless a preset explicitly includes the genre |
 
 ### Per situation
 
@@ -132,50 +127,50 @@ The German label shown in the web UI is given in the first column.
 |---|---|
 | Checkbox | Turns the situation on or off. Turning it off removes its playlist. |
 | Preset | Music style for this situation |
-| Auswahl | Selection mode: **Ausgewogen** (balanced, favorites slightly preferred), **Lieblingssongs** (favorites, well-rated and frequently played songs), **Entdecken** (discover rarely or never played songs), **Neu hinzugefügt** (recently added music) |
+| Selection | **Balanced**: favorites slightly preferred. **Favorites**: favorites, well-rated and frequently played songs. **Discover**: rarely or never played songs. **Recently added**: recently imported music. |
 | Tracks | Empty means the global default |
-| Benutzer | Empty means the owner from the general settings |
+| User | Empty means the owner from the general settings |
 
-### Custom situations (*Eigene Situationen*)
+### Custom situations
 
-Additional playlists can be added under *Eigene Situationen*. Available fields: name, emoji, genres, excluded genres, mood tags, BPM range, years, energy, flow, selection mode, an explicit content filter, track count and user.
+Additional playlists can be added under *Custom situations*. Available fields: name, emoji, genres, excluded genres, mood tags, BPM range, years, energy, flow, selection mode, an explicit content filter, track count and user.
 
 ## Situations and presets
 
-Situations marked with ● are enabled after installation. Names are shown as they appear in the plugin.
+Situations marked with ● are enabled after installation.
 
 | Category | Situation | Presets |
 |---|---|---|
-| Sport & Bewegung (sport) | ● Gym | Mix, Hardstyle, HipHop, EDM, Rock & Metal, Pop |
-| | Laufen (running) | Mix, Drum & Bass, Techno & House, Pop, Rock |
-| | Radfahren (cycling) | Mix, Indie, Elektro, Rock |
-| | Yoga & Meditation | Ambient, Weltmusik, Downtempo, Klassik |
-| | Spazieren & Wandern (walking, hiking) | Mix, Folk, Indie, Akustik |
-| Unterwegs (on the road) | ● Auto fahren (driving) | Mix, Rock, Pop, HipHop, Deutsch, 80er & 90er |
-| | Roadtrip | Klassiker, Mitsingen, Indie, Country |
-| | Bus & Bahn (commuting) | Mix, Lo-Fi, Indie, Elektro |
-| | Nachtfahrt (night drive) | Synthwave, Deep House, Trip-Hop |
-| Zuhause (at home) | ● Kochen (cooking) | Mix, Jazz & Soul, Latin, Funk & Disco, Pop |
-| | ● Essen (dinner) | Jazz, Bossa & Lounge, Klassik, Akustik |
-| | Frühstück (breakfast) | Akustik, Soul, Indie Pop, Jazz |
-| | Aufwachen (waking up) | Gute Laune, Sanft, Power |
-| | ● Putzen (cleaning) | Mix, Pop-Hits, Disco & Funk, Rock, 2000er |
-| | Duschen (shower) | Mitsingen, Power-Balladen, Deutsch |
-| | Garten & Heimwerken (garden, DIY) | Mix, Rock, Country, Reggae |
-| | Gaming | Soundtrack, Synthwave, Elektro, Metal |
-| | Lesen (reading) | Klassik, Ambient, Jazz, Neoklassik |
-| Konzentration (focus) | ● Lernen (studying) | Mix, Lo-Fi, Klassik, Ambient, Soundtrack |
-| | ● Arbeiten & Fokus (work) | Mix, Elektronisch, Post-Rock, Lo-Fi, Klassik |
-| | Kreativ (creative) | Mix, Indie, Trip-Hop, Jazz |
-| Entspannung & Schlaf (relax, sleep) | ● Entspannen (relaxing) | Mix, Chillout, Akustik, Reggae, Soul |
-| | ● Schlafen (sleep) | Ambient, Klavier, Klassik, Naturklänge |
-| | Regentag (rainy day) | Melancholie, Jazz, Trip-Hop |
-| Gesellschaft & Stimmung (social) | ● Party | Mix, Dance & EDM, HipHop & R&B, 2000er, 90er, Schlager & Partyhits |
-| | Dinner mit Gästen (dinner party) | Jazz, Soul & Funk, Lounge, Latin |
-| | Grillen & Sommer (BBQ, summer) | Mix, Reggae & Dancehall, Latin & Afro, Rock, HipHop |
-| | Date & Romantik (date night) | Soul & R&B, Jazz, Akustik, Balladen |
-| | Mit Kindern (with kids) | Kinderlieder, Film & Musical, Gute-Laune-Pop |
-| | Motivation | Episch, Rock, HipHop, Pop |
+| Sports & Fitness | ● Gym | Mix, Hardstyle, HipHop, EDM, Rock & Metal, Pop |
+| | Running | Mix, Drum & Bass, Techno & House, Pop, Rock |
+| | Cycling | Mix, Indie, Electronic, Rock |
+| | Yoga & Meditation | Ambient, World Music, Downtempo, Classical |
+| | Walking & Hiking | Mix, Folk, Indie, Acoustic |
+| On the Road | ● Driving | Mix, Rock, Pop, HipHop, German, 80s & 90s |
+| | Road Trip | Classics, Sing-Along, Indie, Country |
+| | Commute | Mix, Lo-Fi, Indie, Electronic |
+| | Night Drive | Synthwave, Deep House, Trip-Hop |
+| At Home | ● Cooking | Mix, Jazz & Soul, Latin, Funk & Disco, Pop |
+| | ● Mealtime | Jazz, Bossa & Lounge, Classical, Acoustic |
+| | Breakfast | Acoustic, Soul, Indie Pop, Jazz |
+| | Waking Up | Good Mood, Gentle, Power |
+| | ● Cleaning | Mix, Pop Hits, Disco & Funk, Rock, 2000s |
+| | Shower | Sing-Along, Power Ballads, German |
+| | Garden & DIY | Mix, Rock, Country, Reggae |
+| | Gaming | Soundtrack, Synthwave, Electronic, Metal |
+| | Reading | Classical, Ambient, Jazz, Neoclassical |
+| Focus | ● Studying | Mix, Lo-Fi, Classical, Ambient, Soundtrack |
+| | ● Work & Focus | Mix, Electronic, Post-Rock, Lo-Fi, Classical |
+| | Creative | Mix, Indie, Trip-Hop, Jazz |
+| Relax & Sleep | ● Relax | Mix, Chillout, Acoustic, Reggae, Soul |
+| | ● Sleep | Ambient, Piano, Classical, Nature Sounds |
+| | Rainy Day | Melancholy, Jazz, Trip-Hop |
+| Social & Mood | ● Party | Mix, Dance & EDM, HipHop & R&B, 2000s, 90s, Schlager & Party Hits |
+| | Dinner Party | Jazz, Soul & Funk, Lounge, Latin |
+| | BBQ & Summer | Mix, Reggae & Dancehall, Latin & Afro, Rock, HipHop |
+| | Date Night | Soul & R&B, Jazz, Acoustic, Ballads |
+| | With Kids | Kids Songs, Film & Musical, Feel-Good Pop |
+| | Motivation | Epic, Rock, HipHop, Pop |
 
 The *Mix* preset combines the genres of all other presets of a situation. The exact genres and filters are defined in [`catalog/presets.json`](catalog/presets.json).
 
@@ -186,15 +181,15 @@ Navidrome does not analyze audio. It does, however, read the tags of your music 
 | Information | Source | Use |
 |---|---|---|
 | Genre | Tag | Basis of the selection, matched against the genres in your library |
-| Year | Tag | Decade presets such as 80er & 90er |
+| Year | Tag | Decade presets such as 80s & 90s |
 | BPM | Tag | Songs with a suitable tempo are preferred; half and double values count as well |
 | ReplayGain | Tag | Estimates how energetic a song is |
 | Mood | Tag | Matching moods are preferred |
-| Explicit | Tag | Excluded for situations such as sleep and kids |
+| Explicit | Tag | Excluded for situations such as Sleep and With Kids |
 | Duration | File | Very short or long tracks and short intros are filtered out |
 | Favorite, rating | Navidrome | Favorites and 4 to 5 stars are preferred; 1-star songs are never picked |
 | Play count, last played | Navidrome | Recently played songs are picked less often |
-| Date added | Navidrome | Basis of the recently added mode |
+| Date added | Navidrome | Basis of the Recently added mode |
 
 Steps for each playlist:
 
@@ -202,13 +197,13 @@ Steps for each playlist:
 2. **Filter.** Excluded genres, 1-star songs, unsuitable durations and short intros are removed. If too few songs remain, the duration and intro filters are relaxed.
 3. **Weight.** Each song gets a weight from BPM, energy, mood, rating, listening history and selection mode. Songs from recent playlists are weighted down.
 4. **Pick.** Songs are drawn at random according to their weight, with a limit per artist.
-5. **Order.** Depending on the situation, the order is random, rising (e.g. gym, party) or falling (e.g. sleep, yoga). Songs by the same artist never follow each other directly.
+5. **Order.** Depending on the situation, the order is random, rising (e.g. Gym, Party) or falling (e.g. Sleep, Yoga). Songs by the same artist never follow each other directly.
 
 Without BPM, ReplayGain or mood tags, the selection relies on genre and listening history. These tags can be added with tools such as [beets](https://beets.io) or [MusicBrainz Picard](https://picard.musicbrainz.org). Rescan your library in Navidrome afterwards.
 
 ## Stored data
 
-Cantilune uses Navidrome's key-value store (`plugins/cantilune/kvstore.db`). For each situation and day it stores only the song IDs of the generated playlist. Entries expire after the period set under *Wiederholung meiden*. The store is limited to 10 MB; actual usage is usually below 1 MB.
+Cantilune uses Navidrome's key-value store (`plugins/cantilune/kvstore.db`). For each situation and day it stores only the song IDs of the generated playlist. Entries expire after the period set under *Avoid repeats*. The store is limited to 10 MB; actual usage is usually below 1 MB.
 
 Generated playlists are identified by a marker in the playlist comment (`#cl:<situation>:…`). Other playlists are never modified, even if they use the same prefix.
 
@@ -216,26 +211,24 @@ Generated playlists are identified by a marker in the playlist comment (`#cl:<si
 
 Navidrome does not notify plugins when they are removed. To avoid leftover playlists, clean up before removing the plugin:
 
-1. In the plugin settings under *Aufräumen*, enable *Alle Cantilune-Playlists löschen und Plugin pausieren* (delete all Cantilune playlists and pause the plugin) and save.
-2. Wait about 15 seconds until `Aufräumen abgeschlossen` appears in the log.
+1. In the plugin settings under *Cleanup*, enable *Delete all Cantilune playlists and pause the plugin* and save.
+2. Wait about 15 seconds until `cleanup finished` appears in the log.
 3. Disable the plugin and delete `cantilune.ndp`. The folder `plugins/cantilune/` can be deleted as well.
 
 ## Troubleshooting
 
-After each run, Cantilune writes one line per playlist to the Navidrome log (in German):
+After each run, Cantilune writes one line per playlist to the Navidrome log:
 
 ```
-🎧 Gym Hardstyle ⚡ für admin: 50 Songs · Genres: Hardstyle (212), Euphoric Hardstyle (40) · nicht in der Bibliothek: Rawstyle, Gabber · Kandidaten: 252 · aussortiert: Intro/Skit 4, Länge 7 · Metadaten: 31 mit BPM, 50 mit ReplayGain, 9 Favoriten
+🎧 Gym Hardstyle ⚡ for admin: 50 songs · Genres: Hardstyle (212), Euphoric Hardstyle (40) · not in library: Rawstyle, Gabber · candidates: 252 · filtered: duration 7, intro/skit 4 · metadata: 31 with BPM, 50 with ReplayGain, 9 favorites
 ```
-
-It lists the matched genres with their song counts, genres missing from the library, the number of candidates, filtered songs and how many selected songs have BPM, ReplayGain or favorite data.
 
 | Log message | Cause and solution |
 |---|---|
-| `nicht in der Bibliothek: …` | These genres do not exist in your library; the others are still used. If none match, the log suggests similar genres. |
-| `keine passenden Songs … Die bisherige Playlist bleibt erhalten` | No matching songs; the previous playlist is kept. Choose a different preset or check your genre tags. |
-| `Benutzer "…" ist nicht für das Plugin freigegeben` | The user is not permitted. Allow the user under *User access*. |
-| `Uhrzeit "…" ist ungültig` or `Cron-Ausdruck …` | Invalid time or cron expression. Use `HH:MM` or a five-field cron expression; until corrected, `0 4 * * *` is used. |
+| `not in library: …` | These genres do not exist in your library; the others are still used. If none match, the log suggests similar genres. |
+| `no matching songs … The previous playlist is kept.` | Choose a different preset or check your genre tags. |
+| `user "…" is not permitted for the plugin` | Allow the user under *User access* in the plugin settings. |
+| `time "…" is invalid` or `cron expression … must have exactly 5 fields` | Use `HH:MM` or a five-field cron expression. Until corrected, `0 4 * * *` is used. |
 
 To regenerate all playlists immediately, delete the Cantilune playlists and save the plugin settings again.
 
@@ -255,13 +248,12 @@ To regenerate all playlists immediately, delete the Cantilune playlists and save
 ├── catalog/
 │   ├── presets.json     situations and presets
 │   ├── catalog.go       loading and resolving presets
+│   ├── legacy.go        aliases for settings saved by versions before 1.1.0
 │   └── manifest.go      generating manifest.json
 ├── cmd/genmanifest/     manifest.json generator
 ├── assets/              logo
 └── manifest.json        generated, do not edit by hand
 ```
-
-Code comments and user-facing texts are in German.
 
 ### Building
 
@@ -305,15 +297,15 @@ Values under `defaults` apply to all presets of a situation. After a change, reg
 go generate ./...
 ```
 
-Presets are stored in the settings by their display name. If a preset is renamed, existing installations fall back to the first preset of that situation.
+Presets are stored in the settings by their display name. If a preset is renamed, existing installations fall back to the first preset of that situation unless an alias is added in `catalog/legacy.go`.
 
 ### Releases
 
 Pushing a tag in the format `v*` starts the [release workflow](.github/workflows/release.yml). It runs the tests, builds the plugin, takes the version from the tag and attaches `cantilune.ndp` to the release.
 
 ```bash
-git tag -a v1.1.0 -m "Cantilune 1.1.0"
-git push origin v1.1.0
+git tag -a v1.2.0 -m "Cantilune 1.2.0"
+git push origin v1.2.0
 ```
 
 Changes between versions are listed in the [changelog](CHANGELOG.md).

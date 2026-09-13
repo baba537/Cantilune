@@ -2,7 +2,7 @@
   "name": "Cantilune",
   "author": "baba537",
   "version": "0.0.0-dev",
-  "description": "Erstellt täglich automatisch Playlists für 30 Alltagssituationen (Gym, Auto fahren, Kochen, Lernen, Schlafen …) – mit wählbaren Presets und einer Auswahl, die Genres, BPM, ReplayGain, Favoriten, Bewertungen und Hörverlauf berücksichtigt.",
+  "description": "Creates daily playlists for 30 everyday situations (gym, driving, cooking, studying, sleep …) with selectable presets and a song selection based on genre, BPM, ReplayGain, favorites, ratings and listening history.",
   "website": "https://github.com/baba537/Cantilune",
   "config": {
     "schema": {
@@ -10,85 +10,85 @@
       "properties": {
         "playlistPrefix": {
           "type": "string",
-          "title": "Präfix",
-          "description": "Steht vor jedem Playlist-Namen, z. B. 🎧, 🌙 oder ✨.",
+          "title": "Prefix",
+          "description": "Placed before every playlist name, e.g. 🎧, 🌙 or ✨.",
           "minLength": 1,
           "default": "🎧"
         },
         "showPresetInName": {
           "type": "boolean",
-          "title": "Preset im Namen anzeigen (z. B. „Gym Hardstyle ⚡“)",
+          "title": "Show preset in playlist name (e.g. \"Gym Hardstyle ⚡\")",
           "default": true
         },
         "defaultUser": {
           "type": "string",
-          "title": "Zielbenutzer",
-          "description": "Besitzer der Playlists. Leer = erster freigegebener Admin.",
+          "title": "Owner",
+          "description": "User who owns the playlists. Empty = first permitted admin.",
           "default": ""
         },
         "trackCount": {
           "type": "integer",
-          "title": "Tracks pro Playlist",
+          "title": "Tracks per playlist",
           "minimum": 1,
           "maximum": 500,
           "default": 50
         },
         "publicPlaylists": {
           "type": "boolean",
-          "title": "Playlists öffentlich machen (für alle Benutzer sichtbar)",
+          "title": "Make playlists public (visible to all users)",
           "default": true
         },
         "generationTime": {
           "type": "string",
-          "title": "Uhrzeit (HH:MM)",
-          "description": "Tägliche Neugenerierung (Serverzeit)",
+          "title": "Time (HH:MM)",
+          "description": "Daily regeneration (server time)",
           "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
           "default": "04:00"
         },
         "cronExpression": {
           "type": "string",
           "title": "Cron (optional)",
-          "description": "Überschreibt die Uhrzeit, z. B. „0 */6 * * *“",
+          "description": "Overrides the time, e.g. \"0 */6 * * *\"",
           "default": ""
         },
         "runOnStartup": {
           "type": "boolean",
-          "title": "Nach dem Speichern fehlende oder geänderte Playlists sofort erstellen",
+          "title": "Create missing or changed playlists right after saving",
           "default": true
         },
         "maxPerArtist": {
           "type": "integer",
-          "title": "Max. pro Künstler",
-          "description": "Songs je Künstler pro Playlist, 0 = unbegrenzt",
+          "title": "Max. per artist",
+          "description": "Songs per artist per playlist, 0 = unlimited",
           "minimum": 0,
           "maximum": 100,
           "default": 3
         },
         "avoidRecentDays": {
           "type": "integer",
-          "title": "Gehörtes meiden (Tage)",
-          "description": "Kürzlich gehörte Songs seltener wählen, 0 = aus",
+          "title": "Avoid played (days)",
+          "description": "Pick recently played songs less often, 0 = off",
           "minimum": 0,
           "maximum": 90,
           "default": 3
         },
         "historyDays": {
           "type": "integer",
-          "title": "Wiederholung meiden (Tage)",
-          "description": "Songs aus den Playlists der letzten Tage seltener wählen, 0 = nur Vortag",
+          "title": "Avoid repeats (days)",
+          "description": "Pick songs from recent playlists less often, 0 = previous playlist only",
           "minimum": 0,
           "maximum": 30,
           "default": 7
         },
         "skipInterludes": {
           "type": "boolean",
-          "title": "Kurze Intros, Skits und Interludes überspringen",
+          "title": "Skip short intros, skits and interludes",
           "default": true
         },
         "excludeGenres": {
           "type": "array",
-          "title": "Genres nie verwenden",
-          "description": "Gilt für alle Playlists, außer ein Preset wählt das Genre ausdrücklich.",
+          "title": "Never use these genres",
+          "description": "Applies to all playlists unless a preset explicitly includes the genre.",
           "items": {
             "type": "string"
           },
@@ -107,8 +107,8 @@
         },
         "removeAllPlaylists": {
           "type": "boolean",
-          "title": "Alle Cantilune-Playlists löschen und Plugin pausieren",
-          "description": "Vor dem Deinstallieren einschalten und speichern: Navidrome meldet Plugins das Entfernen nicht, danach kann Cantilune nicht mehr aufräumen.",
+          "title": "Delete all Cantilune playlists and pause the plugin",
+          "description": "Enable and save before uninstalling. Navidrome does not notify plugins when they are removed, so Cantilune cannot clean up afterwards.",
           "default": false
         },
         "gym": {
@@ -135,41 +135,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 💪",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "laufen": {
           "type": "object",
-          "title": "Laufen 🏃",
+          "title": "Running 🏃",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Laufen 🏃",
+              "title": "Running 🏃",
               "default": false
             },
             "preset": {
@@ -186,41 +186,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🏃",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "radfahren": {
           "type": "object",
-          "title": "Radfahren 🚴",
+          "title": "Cycling 🚴",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Radfahren 🚴",
+              "title": "Cycling 🚴",
               "default": false
             },
             "preset": {
@@ -229,39 +229,39 @@
               "enum": [
                 "Mix 🚴",
                 "Indie 🌿",
-                "Elektro 🎧",
+                "Electronic 🎧",
                 "Rock 🎸"
               ],
               "default": "Mix 🚴"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🚴",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "yoga": {
@@ -278,49 +278,49 @@
               "title": "Preset",
               "enum": [
                 "Ambient 🌌",
-                "Weltmusik 🌍",
+                "World Music 🌍",
                 "Downtempo 🌙",
-                "Klassik 🎻"
+                "Classical 🎻"
               ],
               "default": "Ambient 🌌"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Ambient 🌌",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "wandern": {
           "type": "object",
-          "title": "Spazieren & Wandern 🥾",
+          "title": "Walking & Hiking 🥾",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Spazieren & Wandern 🥾",
+              "title": "Walking & Hiking 🥾",
               "default": false
             },
             "preset": {
@@ -330,47 +330,47 @@
                 "Mix 🥾",
                 "Folk 🪕",
                 "Indie 🌿",
-                "Akustik 🎸"
+                "Acoustic 🎸"
               ],
               "default": "Mix 🥾"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🥾",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "autoFahren": {
           "type": "object",
-          "title": "Auto fahren 🚗",
+          "title": "Driving 🚗",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Auto fahren 🚗",
+              "title": "Driving 🚗",
               "default": true
             },
             "preset": {
@@ -381,98 +381,98 @@
                 "Rock 🎸",
                 "Pop 🎶",
                 "HipHop 🎤",
-                "Deutsch 🇩🇪",
-                "80er & 90er 📼"
+                "German 🇩🇪",
+                "80s & 90s 📼"
               ],
               "default": "Mix 🚗"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🚗",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "roadtrip": {
           "type": "object",
-          "title": "Roadtrip 🛣️",
+          "title": "Road Trip 🛣️",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Roadtrip 🛣️",
+              "title": "Road Trip 🛣️",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Klassiker 🎸",
-                "Mitsingen 🎤",
+                "Classics 🎸",
+                "Sing-Along 🎤",
                 "Indie 🌿",
                 "Country 🤠"
               ],
-              "default": "Klassiker 🎸"
+              "default": "Classics 🎸"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Klassiker 🎸",
-            "mode": "Ausgewogen"
+            "preset": "Classics 🎸",
+            "mode": "Balanced"
           }
         },
         "pendeln": {
           "type": "object",
-          "title": "Bus & Bahn 🚆",
+          "title": "Commute 🚆",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Bus & Bahn 🚆",
+              "title": "Commute 🚆",
               "default": false
             },
             "preset": {
@@ -482,47 +482,47 @@
                 "Mix 🚆",
                 "Lo-Fi ☕",
                 "Indie 🌿",
-                "Elektro 🎧"
+                "Electronic 🎧"
               ],
               "default": "Mix 🚆"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🚆",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "nachtfahrt": {
           "type": "object",
-          "title": "Nachtfahrt 🌃",
+          "title": "Night Drive 🌃",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Nachtfahrt 🌃",
+              "title": "Night Drive 🌃",
               "default": false
             },
             "preset": {
@@ -537,41 +537,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Synthwave 🌆",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "kochen": {
           "type": "object",
-          "title": "Kochen 🍳",
+          "title": "Cooking 🍳",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Kochen 🍳",
+              "title": "Cooking 🍳",
               "default": true
             },
             "preset": {
@@ -588,41 +588,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🍳",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "essen": {
           "type": "object",
-          "title": "Essen 🍽️",
+          "title": "Mealtime 🍽️",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Essen 🍽️",
+              "title": "Mealtime 🍽️",
               "default": true
             },
             "preset": {
@@ -631,147 +631,147 @@
               "enum": [
                 "Jazz 🎷",
                 "Bossa & Lounge 🍸",
-                "Klassik 🎻",
-                "Akustik 🪕"
+                "Classical 🎻",
+                "Acoustic 🪕"
               ],
               "default": "Jazz 🎷"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Jazz 🎷",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "fruehstueck": {
           "type": "object",
-          "title": "Frühstück ☕",
+          "title": "Breakfast ☕",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Frühstück ☕",
+              "title": "Breakfast ☕",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Akustik 🪕",
+                "Acoustic 🪕",
                 "Soul ☀️",
                 "Indie Pop 🌿",
                 "Jazz 🎷"
               ],
-              "default": "Akustik 🪕"
+              "default": "Acoustic 🪕"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Akustik 🪕",
-            "mode": "Ausgewogen"
+            "preset": "Acoustic 🪕",
+            "mode": "Balanced"
           }
         },
         "aufwachen": {
           "type": "object",
-          "title": "Aufwachen 🌅",
+          "title": "Waking Up 🌅",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Aufwachen 🌅",
+              "title": "Waking Up 🌅",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Gute Laune ☀️",
-                "Sanft 🌤️",
+                "Good Mood ☀️",
+                "Gentle 🌤️",
                 "Power ⚡"
               ],
-              "default": "Gute Laune ☀️"
+              "default": "Good Mood ☀️"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Gute Laune ☀️",
-            "mode": "Ausgewogen"
+            "preset": "Good Mood ☀️",
+            "mode": "Balanced"
           }
         },
         "putzen": {
           "type": "object",
-          "title": "Putzen 🧹",
+          "title": "Cleaning 🧹",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Putzen 🧹",
+              "title": "Cleaning 🧹",
               "default": true
             },
             "preset": {
@@ -779,99 +779,99 @@
               "title": "Preset",
               "enum": [
                 "Mix 🧹",
-                "Pop-Hits 🎶",
+                "Pop Hits 🎶",
                 "Disco & Funk 🕺",
                 "Rock 🎸",
-                "2000er 💿"
+                "2000s 💿"
               ],
               "default": "Mix 🧹"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🧹",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "duschen": {
           "type": "object",
-          "title": "Duschen 🚿",
+          "title": "Shower 🚿",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Duschen 🚿",
+              "title": "Shower 🚿",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Mitsingen 🎤",
-                "Power-Balladen 🎸",
-                "Deutsch 🇩🇪"
+                "Sing-Along 🎤",
+                "Power Ballads 🎸",
+                "German 🇩🇪"
               ],
-              "default": "Mitsingen 🎤"
+              "default": "Sing-Along 🎤"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Mitsingen 🎤",
-            "mode": "Ausgewogen"
+            "preset": "Sing-Along 🎤",
+            "mode": "Balanced"
           }
         },
         "garten": {
           "type": "object",
-          "title": "Garten & Heimwerken 🔨",
+          "title": "Garden & DIY 🔨",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Garten & Heimwerken 🔨",
+              "title": "Garden & DIY 🔨",
               "default": false
             },
             "preset": {
@@ -887,32 +887,32 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🔨",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "gaming": {
@@ -930,98 +930,98 @@
               "enum": [
                 "Soundtrack 🎬",
                 "Synthwave 🌆",
-                "Elektro 🎧",
+                "Electronic 🎧",
                 "Metal 🤘"
               ],
               "default": "Soundtrack 🎬"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Soundtrack 🎬",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "lesen": {
           "type": "object",
-          "title": "Lesen 📖",
+          "title": "Reading 📖",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Lesen 📖",
+              "title": "Reading 📖",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Klassik 🎻",
+                "Classical 🎻",
                 "Ambient 🌌",
                 "Jazz 🎷",
-                "Neoklassik 🎹"
+                "Neoclassical 🎹"
               ],
-              "default": "Klassik 🎻"
+              "default": "Classical 🎻"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Klassik 🎻",
-            "mode": "Ausgewogen"
+            "preset": "Classical 🎻",
+            "mode": "Balanced"
           }
         },
         "lernen": {
           "type": "object",
-          "title": "Lernen 📚",
+          "title": "Studying 📚",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Lernen 📚",
+              "title": "Studying 📚",
               "default": true
             },
             "preset": {
@@ -1030,7 +1030,7 @@
               "enum": [
                 "Mix 📚",
                 "Lo-Fi ☕",
-                "Klassik 🎻",
+                "Classical 🎻",
                 "Ambient 🌌",
                 "Soundtrack 🎬"
               ],
@@ -1038,41 +1038,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 📚",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "fokus": {
           "type": "object",
-          "title": "Arbeiten & Fokus 🎯",
+          "title": "Work & Focus 🎯",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Arbeiten & Fokus 🎯",
+              "title": "Work & Focus 🎯",
               "default": true
             },
             "preset": {
@@ -1080,50 +1080,50 @@
               "title": "Preset",
               "enum": [
                 "Mix 🎯",
-                "Elektronisch 🎧",
+                "Electronic 🎧",
                 "Post-Rock 🌊",
                 "Lo-Fi ☕",
-                "Klassik 🎻"
+                "Classical 🎻"
               ],
               "default": "Mix 🎯"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🎯",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "kreativ": {
           "type": "object",
-          "title": "Kreativ 🎨",
+          "title": "Creative 🎨",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Kreativ 🎨",
+              "title": "Creative 🎨",
               "default": false
             },
             "preset": {
@@ -1139,41 +1139,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix 🎨",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "entspannen": {
           "type": "object",
-          "title": "Entspannen 🛋️",
+          "title": "Relax 🛋️",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Entspannen 🛋️",
+              "title": "Relax 🛋️",
               "default": true
             },
             "preset": {
@@ -1182,7 +1182,7 @@
               "enum": [
                 "Mix 🛋️",
                 "Chillout 🌴",
-                "Akustik 🪕",
+                "Acoustic 🪕",
                 "Reggae 🌴",
                 "Soul 🎙️"
               ],
@@ -1190,41 +1190,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🛋️",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "schlafen": {
           "type": "object",
-          "title": "Schlafen 😴",
+          "title": "Sleep 😴",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Schlafen 😴",
+              "title": "Sleep 😴",
               "default": true
             },
             "preset": {
@@ -1232,89 +1232,89 @@
               "title": "Preset",
               "enum": [
                 "Ambient 🌌",
-                "Klavier 🎹",
-                "Klassik 🎻",
-                "Naturklänge 🌧️"
+                "Piano 🎹",
+                "Classical 🎻",
+                "Nature Sounds 🌧️"
               ],
               "default": "Ambient 🌌"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Ambient 🌌",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "regentag": {
           "type": "object",
-          "title": "Regentag 🌧️",
+          "title": "Rainy Day 🌧️",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Regentag 🌧️",
+              "title": "Rainy Day 🌧️",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Melancholie 🌧️",
+                "Melancholy 🌧️",
                 "Jazz 🎷",
                 "Trip-Hop 🌀"
               ],
-              "default": "Melancholie 🌧️"
+              "default": "Melancholy 🌧️"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Melancholie 🌧️",
-            "mode": "Ausgewogen"
+            "preset": "Melancholy 🌧️",
+            "mode": "Balanced"
           }
         },
         "party": {
@@ -1333,49 +1333,49 @@
                 "Mix 🎉",
                 "Dance & EDM 🔥",
                 "HipHop & R&B 🎤",
-                "2000er 💿",
-                "90er 📼",
-                "Schlager & Partyhits 🍻"
+                "2000s 💿",
+                "90s 📼",
+                "Schlager & Party Hits 🍻"
               ],
               "default": "Mix 🎉"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": true,
             "preset": "Mix 🎉",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "dinner": {
           "type": "object",
-          "title": "Dinner mit Gästen 🥂",
+          "title": "Dinner Party 🥂",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Dinner mit Gästen 🥂",
+              "title": "Dinner Party 🥂",
               "default": false
             },
             "preset": {
@@ -1391,41 +1391,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Jazz 🎷",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "grillen": {
           "type": "object",
-          "title": "Grillen & Sommer ☀️",
+          "title": "BBQ & Summer ☀️",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Grillen & Sommer ☀️",
+              "title": "BBQ & Summer ☀️",
               "default": false
             },
             "preset": {
@@ -1442,41 +1442,41 @@
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Mix ☀️",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "romantik": {
           "type": "object",
-          "title": "Date & Romantik 🌹",
+          "title": "Date Night 🌹",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Date & Romantik 🌹",
+              "title": "Date Night 🌹",
               "default": false
             },
             "preset": {
@@ -1485,88 +1485,88 @@
               "enum": [
                 "Soul & R&B 🎙️",
                 "Jazz 🎷",
-                "Akustik 🪕",
-                "Balladen 💕"
+                "Acoustic 🪕",
+                "Ballads 💕"
               ],
               "default": "Soul & R&B 🎙️"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
             "preset": "Soul & R&B 🎙️",
-            "mode": "Ausgewogen"
+            "mode": "Balanced"
           }
         },
         "kinder": {
           "type": "object",
-          "title": "Mit Kindern 🧸",
+          "title": "With Kids 🧸",
           "properties": {
             "enabled": {
               "type": "boolean",
-              "title": "Mit Kindern 🧸",
+              "title": "With Kids 🧸",
               "default": false
             },
             "preset": {
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Kinderlieder 🧸",
+                "Kids Songs 🧸",
                 "Film & Musical 🎬",
-                "Gute-Laune-Pop 🎶"
+                "Feel-Good Pop 🎶"
               ],
-              "default": "Kinderlieder 🧸"
+              "default": "Kids Songs 🧸"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Kinderlieder 🧸",
-            "mode": "Ausgewogen"
+            "preset": "Kids Songs 🧸",
+            "mode": "Balanced"
           }
         },
         "motivation": {
@@ -1582,53 +1582,53 @@
               "type": "string",
               "title": "Preset",
               "enum": [
-                "Episch 🎬",
+                "Epic 🎬",
                 "Rock 🎸",
                 "HipHop 🎤",
                 "Pop 🎶"
               ],
-              "default": "Episch 🎬"
+              "default": "Epic 🎬"
             },
             "mode": {
               "type": "string",
-              "title": "Auswahl",
+              "title": "Selection",
               "enum": [
-                "Ausgewogen",
-                "Lieblingssongs",
-                "Entdecken",
-                "Neu hinzugefügt"
+                "Balanced",
+                "Favorites",
+                "Discover",
+                "Recently added"
               ],
-              "default": "Ausgewogen"
+              "default": "Balanced"
             },
             "trackCount": {
               "type": "integer",
               "title": "Tracks",
-              "description": "leer = Standard",
+              "description": "empty = default",
               "minimum": 0,
               "maximum": 500
             },
             "targetUser": {
               "type": "string",
-              "title": "Benutzer",
-              "description": "leer = Standard-Zielbenutzer"
+              "title": "User",
+              "description": "empty = default owner"
             }
           },
           "default": {
             "enabled": false,
-            "preset": "Episch 🎬",
-            "mode": "Ausgewogen"
+            "preset": "Epic 🎬",
+            "mode": "Balanced"
           }
         },
         "customSituations": {
           "type": "array",
-          "title": "Eigene Situationen",
-          "description": "Beliebig viele zusätzliche Situationen mit eigenen Filtern.",
+          "title": "Custom situations",
+          "description": "Any number of additional situations with your own filters.",
           "items": {
             "type": "object",
             "properties": {
               "enabled": {
                 "type": "boolean",
-                "title": "Aktiviert",
+                "title": "Enabled",
                 "default": true
               },
               "name": {
@@ -1642,21 +1642,21 @@
               },
               "genres": {
                 "type": "array",
-                "title": "Genres (leer = ganze Bibliothek)",
+                "title": "Genres (empty = whole library)",
                 "items": {
                   "type": "string"
                 }
               },
               "excludeGenres": {
                 "type": "array",
-                "title": "Genres ausschließen",
+                "title": "Excluded genres",
                 "items": {
                   "type": "string"
                 }
               },
               "moods": {
                 "type": "array",
-                "title": "Stimmungen (Mood-Tags)",
+                "title": "Moods (mood tags)",
                 "items": {
                   "type": "string"
                 }
@@ -1675,63 +1675,63 @@
               },
               "fromYear": {
                 "type": "integer",
-                "title": "Jahr ab",
+                "title": "From year",
                 "minimum": 0,
                 "maximum": 2100
               },
               "toYear": {
                 "type": "integer",
-                "title": "Jahr bis",
+                "title": "To year",
                 "minimum": 0,
                 "maximum": 2100
               },
               "energy": {
                 "type": "string",
-                "title": "Energie",
+                "title": "Energy",
                 "enum": [
-                  "egal",
-                  "ruhig",
-                  "mittel",
-                  "energiegeladen"
+                  "any",
+                  "calm",
+                  "medium",
+                  "energetic"
                 ],
-                "default": "egal"
+                "default": "any"
               },
               "flow": {
                 "type": "string",
-                "title": "Verlauf",
+                "title": "Flow",
                 "enum": [
-                  "zufällig",
-                  "ansteigend",
-                  "abklingend"
+                  "random",
+                  "rising",
+                  "falling"
                 ],
-                "default": "zufällig"
+                "default": "random"
               },
               "mode": {
                 "type": "string",
-                "title": "Auswahl",
+                "title": "Selection",
                 "enum": [
-                  "Ausgewogen",
-                  "Lieblingssongs",
-                  "Entdecken",
-                  "Neu hinzugefügt"
+                  "Balanced",
+                  "Favorites",
+                  "Discover",
+                  "Recently added"
                 ],
-                "default": "Ausgewogen"
+                "default": "Balanced"
               },
               "excludeExplicit": {
                 "type": "boolean",
-                "title": "Explizite Songs ausschließen"
+                "title": "Exclude explicit songs"
               },
               "trackCount": {
                 "type": "integer",
                 "title": "Tracks",
-                "description": "leer = Standard",
+                "description": "empty = default",
                 "minimum": 0,
                 "maximum": 500
               },
               "targetUser": {
                 "type": "string",
-                "title": "Benutzer",
-                "description": "leer = Standard-Zielbenutzer"
+                "title": "User",
+                "description": "empty = default owner"
               }
             },
             "required": [
@@ -1747,7 +1747,7 @@
       "elements": [
         {
           "type": "Group",
-          "label": "Allgemein",
+          "label": "General",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -1783,7 +1783,7 @@
         },
         {
           "type": "Group",
-          "label": "Zeitplan",
+          "label": "Schedule",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -1806,7 +1806,7 @@
         },
         {
           "type": "Group",
-          "label": "Auswahl",
+          "label": "Selection",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -1837,7 +1837,7 @@
         },
         {
           "type": "Group",
-          "label": "🏋️ Sport & Bewegung",
+          "label": "🏋️ Sports & Fitness",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -1871,7 +1871,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/laufen/properties/enabled",
-                  "label": "Laufen 🏃"
+                  "label": "Running 🏃"
                 },
                 {
                   "type": "Control",
@@ -1897,7 +1897,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/radfahren/properties/enabled",
-                  "label": "Radfahren 🚴"
+                  "label": "Cycling 🚴"
                 },
                 {
                   "type": "Control",
@@ -1949,7 +1949,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/wandern/properties/enabled",
-                  "label": "Spazieren & Wandern 🥾"
+                  "label": "Walking & Hiking 🥾"
                 },
                 {
                   "type": "Control",
@@ -1973,7 +1973,7 @@
         },
         {
           "type": "Group",
-          "label": "🚗 Unterwegs",
+          "label": "🚗 On the Road",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -1981,7 +1981,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/autoFahren/properties/enabled",
-                  "label": "Auto fahren 🚗"
+                  "label": "Driving 🚗"
                 },
                 {
                   "type": "Control",
@@ -2007,7 +2007,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/roadtrip/properties/enabled",
-                  "label": "Roadtrip 🛣️"
+                  "label": "Road Trip 🛣️"
                 },
                 {
                   "type": "Control",
@@ -2033,7 +2033,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/pendeln/properties/enabled",
-                  "label": "Bus & Bahn 🚆"
+                  "label": "Commute 🚆"
                 },
                 {
                   "type": "Control",
@@ -2059,7 +2059,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/nachtfahrt/properties/enabled",
-                  "label": "Nachtfahrt 🌃"
+                  "label": "Night Drive 🌃"
                 },
                 {
                   "type": "Control",
@@ -2083,7 +2083,7 @@
         },
         {
           "type": "Group",
-          "label": "🏠 Zuhause",
+          "label": "🏠 At Home",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -2091,7 +2091,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/kochen/properties/enabled",
-                  "label": "Kochen 🍳"
+                  "label": "Cooking 🍳"
                 },
                 {
                   "type": "Control",
@@ -2117,7 +2117,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/essen/properties/enabled",
-                  "label": "Essen 🍽️"
+                  "label": "Mealtime 🍽️"
                 },
                 {
                   "type": "Control",
@@ -2143,7 +2143,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/fruehstueck/properties/enabled",
-                  "label": "Frühstück ☕"
+                  "label": "Breakfast ☕"
                 },
                 {
                   "type": "Control",
@@ -2169,7 +2169,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/aufwachen/properties/enabled",
-                  "label": "Aufwachen 🌅"
+                  "label": "Waking Up 🌅"
                 },
                 {
                   "type": "Control",
@@ -2195,7 +2195,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/putzen/properties/enabled",
-                  "label": "Putzen 🧹"
+                  "label": "Cleaning 🧹"
                 },
                 {
                   "type": "Control",
@@ -2221,7 +2221,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/duschen/properties/enabled",
-                  "label": "Duschen 🚿"
+                  "label": "Shower 🚿"
                 },
                 {
                   "type": "Control",
@@ -2247,7 +2247,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/garten/properties/enabled",
-                  "label": "Garten & Heimwerken 🔨"
+                  "label": "Garden & DIY 🔨"
                 },
                 {
                   "type": "Control",
@@ -2299,7 +2299,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/lesen/properties/enabled",
-                  "label": "Lesen 📖"
+                  "label": "Reading 📖"
                 },
                 {
                   "type": "Control",
@@ -2323,7 +2323,7 @@
         },
         {
           "type": "Group",
-          "label": "🧠 Konzentration",
+          "label": "🧠 Focus",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -2331,7 +2331,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/lernen/properties/enabled",
-                  "label": "Lernen 📚"
+                  "label": "Studying 📚"
                 },
                 {
                   "type": "Control",
@@ -2357,7 +2357,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/fokus/properties/enabled",
-                  "label": "Arbeiten & Fokus 🎯"
+                  "label": "Work & Focus 🎯"
                 },
                 {
                   "type": "Control",
@@ -2383,7 +2383,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/kreativ/properties/enabled",
-                  "label": "Kreativ 🎨"
+                  "label": "Creative 🎨"
                 },
                 {
                   "type": "Control",
@@ -2407,7 +2407,7 @@
         },
         {
           "type": "Group",
-          "label": "🌙 Entspannung & Schlaf",
+          "label": "🌙 Relax & Sleep",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -2415,7 +2415,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/entspannen/properties/enabled",
-                  "label": "Entspannen 🛋️"
+                  "label": "Relax 🛋️"
                 },
                 {
                   "type": "Control",
@@ -2441,7 +2441,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/schlafen/properties/enabled",
-                  "label": "Schlafen 😴"
+                  "label": "Sleep 😴"
                 },
                 {
                   "type": "Control",
@@ -2467,7 +2467,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/regentag/properties/enabled",
-                  "label": "Regentag 🌧️"
+                  "label": "Rainy Day 🌧️"
                 },
                 {
                   "type": "Control",
@@ -2491,7 +2491,7 @@
         },
         {
           "type": "Group",
-          "label": "🎉 Gesellschaft & Stimmung",
+          "label": "🎉 Social & Mood",
           "elements": [
             {
               "type": "HorizontalLayout",
@@ -2525,7 +2525,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/dinner/properties/enabled",
-                  "label": "Dinner mit Gästen 🥂"
+                  "label": "Dinner Party 🥂"
                 },
                 {
                   "type": "Control",
@@ -2551,7 +2551,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/grillen/properties/enabled",
-                  "label": "Grillen & Sommer ☀️"
+                  "label": "BBQ & Summer ☀️"
                 },
                 {
                   "type": "Control",
@@ -2577,7 +2577,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/romantik/properties/enabled",
-                  "label": "Date & Romantik 🌹"
+                  "label": "Date Night 🌹"
                 },
                 {
                   "type": "Control",
@@ -2603,7 +2603,7 @@
                 {
                   "type": "Control",
                   "scope": "#/properties/kinder/properties/enabled",
-                  "label": "Mit Kindern 🧸"
+                  "label": "With Kids 🧸"
                 },
                 {
                   "type": "Control",
@@ -2653,7 +2653,7 @@
         },
         {
           "type": "Group",
-          "label": "✏️ Eigene Situationen",
+          "label": "✏️ Custom situations",
           "elements": [
             {
               "type": "Control",
@@ -2750,7 +2750,7 @@
         },
         {
           "type": "Group",
-          "label": "🧹 Aufräumen",
+          "label": "🧹 Cleanup",
           "elements": [
             {
               "type": "Control",
@@ -2763,16 +2763,16 @@
   },
   "permissions": {
     "subsonicapi": {
-      "reason": "Songs samt Metadaten abrufen (getRandomSongs, getGenres, getPlaylist) sowie Cantilune-Playlists anlegen, veröffentlichen und ersetzen"
+      "reason": "Read songs and their metadata (getRandomSongs, getGenres, getPlaylist) and create, publish and replace Cantilune playlists"
     },
     "users": {
-      "reason": "Die Subsonic-API-Aufrufe im Namen der konfigurierten Zielbenutzer ausführen"
+      "reason": "Perform Subsonic API calls on behalf of the configured playlist owners"
     },
     "scheduler": {
-      "reason": "Playlists täglich zur konfigurierten Uhrzeit neu generieren"
+      "reason": "Regenerate playlists daily at the configured time"
     },
     "kvstore": {
-      "reason": "Songs der letzten Tage merken, damit sich Playlists nicht wiederholen",
+      "reason": "Remember songs from recent days so playlists do not repeat",
       "maxSize": "10MB"
     }
   }

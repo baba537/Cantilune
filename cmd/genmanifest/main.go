@@ -1,6 +1,6 @@
-// genmanifest erzeugt manifest.json aus catalog/presets.json.
+// genmanifest generates manifest.json from catalog/presets.json.
 //
-// Aufruf im Repo-Wurzelverzeichnis: go generate ./...
+// Run from the repository root: go generate ./...
 package main
 
 import (
@@ -20,5 +20,5 @@ func main() {
 		fmt.Fprintln(os.Stderr, "genmanifest:", err)
 		os.Exit(1)
 	}
-	fmt.Println("manifest.json aktualisiert")
+	fmt.Println("manifest.json updated")
 }

@@ -20,16 +20,16 @@ jobs:
         with:
           tinygo-version: "0.42.0"
 
-      - name: Abhängigkeiten auflösen
+      - name: Resolve dependencies
         run: go mod tidy
 
-      - name: Manifest prüfen
+      - name: Check manifest
         run: jq -e '.name and .author and .version and .config.schema' manifest.json > /dev/null
 
       - name: Tests
         run: go test ./...
 
-      - name: Paket bauen
+      - name: Build package
         run: make package VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
 
       - uses: actions/upload-artifact@v4

@@ -1,9 +1,8 @@
-// Package catalog enthält die eingebauten Alltagssituationen mit ihren Presets
-// (presets.json) sowie die Standardwerte der Plugin-Einstellungen.
+// Package catalog contains the built-in situations with their presets
+// (presets.json) and the default values of the plugin settings.
 //
-// presets.json ist die einzige Quelle für Situationen und Presets:
-// manifest.json wird daraus mit `go generate` erzeugt, und das Plugin bettet
-// die Datei zur Laufzeit ein.
+// presets.json is the single source for situations and presets: manifest.json
+// is generated from it with `go generate`, and the plugin embeds it at runtime.
 package catalog
 
 import (
@@ -16,7 +15,7 @@ import (
 //go:embed presets.json
 var presetsJSON []byte
 
-// Energie-Stufen und Verläufe (Werte in presets.json).
+// Energy levels and flows (values used in presets.json).
 const (
 	EnergyLow    = "low"
 	EnergyMedium = "medium"
@@ -27,28 +26,28 @@ const (
 	FlowFalling = "falling"
 )
 
-// Auswahl-Modi (Dropdown pro Situation). Die Texte sind gleichzeitig die
-// gespeicherten Werte – nicht umbenennen, sonst fallen gespeicherte
-// Einstellungen auf den Standard zurück.
+// Selection modes (dropdown per situation). The labels are also the stored
+// values; renaming them resets existing settings to the default unless an
+// alias is added in legacy.go.
 const (
-	ModeBalanced      = "Ausgewogen"
-	ModeFavorites     = "Lieblingssongs"
-	ModeDiscover      = "Entdecken"
-	ModeRecentlyAdded = "Neu hinzugefügt"
+	ModeBalanced      = "Balanced"
+	ModeFavorites     = "Favorites"
+	ModeDiscover      = "Discover"
+	ModeRecentlyAdded = "Recently added"
 )
 
-// Modes listet alle Auswahl-Modi in Anzeigereihenfolge.
+// Modes lists all selection modes in display order.
 var Modes = []string{ModeBalanced, ModeFavorites, ModeDiscover, ModeRecentlyAdded}
 
-// Energie- und Verlaufs-Bezeichnungen für eigene Situationen im Web-UI.
+// Energy and flow labels for custom situations in the web UI.
 var (
-	EnergyLabels = map[string]string{"egal": "", "ruhig": EnergyLow, "mittel": EnergyMedium, "energiegeladen": EnergyHigh}
-	FlowLabels   = map[string]string{"zufällig": FlowShuffle, "ansteigend": FlowRising, "abklingend": FlowFalling}
-	EnergyOrder  = []string{"egal", "ruhig", "mittel", "energiegeladen"}
-	FlowOrder    = []string{"zufällig", "ansteigend", "abklingend"}
+	EnergyLabels = map[string]string{"any": "", "calm": EnergyLow, "medium": EnergyMedium, "energetic": EnergyHigh}
+	FlowLabels   = map[string]string{"random": FlowShuffle, "rising": FlowRising, "falling": FlowFalling}
+	EnergyOrder  = []string{"any", "calm", "medium", "energetic"}
+	FlowOrder    = []string{"random", "rising", "falling"}
 )
 
-// Standardwerte der globalen Einstellungen.
+// Default values of the global settings.
 const (
 	DefaultPrefix          = "🎧"
 	DefaultHistoryDays     = 7
@@ -61,14 +60,15 @@ const (
 	DefaultMaxDuration     = 900
 )
 
-// DefaultExcludeGenres werden nie ausgewählt, außer ein Preset verlangt sie ausdrücklich.
+// DefaultExcludeGenres are never selected unless a preset explicitly asks for them.
+// The list contains genre tags as they appear in libraries, including German ones.
 var DefaultExcludeGenres = []string{
 	"Audiobook", "Hörbuch", "Hörspiel", "Podcast", "Spoken Word", "Comedy",
 	"Christmas", "Weihnachten", "Kinderlieder", "Children's Music",
 }
 
-// Recipe beschreibt, welche Songs in eine Playlist passen.
-// Leere bzw. 0-Werte bedeuten "keine Einschränkung".
+// Recipe describes which songs fit a playlist.
+// Empty or zero values mean "no restriction".
 type Recipe struct {
 	Genres          []string `json:"genres,omitempty"`
 	ExcludeGenres   []string `json:"excludeGenres,omitempty"`
@@ -84,16 +84,16 @@ type Recipe struct {
 	ExcludeExplicit bool     `json:"excludeExplicit,omitempty"`
 }
 
-// Preset ist eine wählbare Variante einer Situation.
+// Preset is a selectable variant of a situation.
 type Preset struct {
 	Name  string `json:"name"`
 	Emoji string `json:"emoji,omitempty"`
-	// Mix kombiniert die Genres aller anderen Presets der Situation.
+	// Mix combines the genres of all other presets of the situation.
 	Mix bool `json:"mix,omitempty"`
 	Recipe
 }
 
-// Situation ist eine eingebaute Alltagssituation.
+// Situation is a built-in everyday situation.
 type Situation struct {
 	ID       string   `json:"id"`
 	Name     string   `json:"name"`
@@ -104,13 +104,13 @@ type Situation struct {
 	Presets  []Preset `json:"presets"`
 }
 
-// Category gruppiert Situationen im Web-UI.
+// Category groups situations in the web UI.
 type Category struct {
 	ID    string `json:"id"`
 	Label string `json:"label"`
 }
 
-// Catalog ist der geladene Inhalt von presets.json.
+// Catalog is the loaded content of presets.json.
 type Catalog struct {
 	Categories []Category  `json:"categories"`
 	Situations []Situation `json:"situations"`
@@ -118,14 +118,14 @@ type Catalog struct {
 
 var loaded *Catalog
 
-// Load liefert den eingebetteten Katalog (einmalig geparst).
+// Load returns the embedded catalog (parsed once).
 func Load() (*Catalog, error) {
 	if loaded != nil {
 		return loaded, nil
 	}
 	var c Catalog
 	if err := json.Unmarshal(presetsJSON, &c); err != nil {
-		return nil, fmt.Errorf("presets.json ist ungültig: %w", err)
+		return nil, fmt.Errorf("invalid presets.json: %w", err)
 	}
 	if err := c.validate(); err != nil {
 		return nil, err
@@ -142,23 +142,23 @@ func (c *Catalog) validate() error {
 	ids := map[string]bool{}
 	for _, s := range c.Situations {
 		if s.ID == "" || s.Name == "" {
-			return fmt.Errorf("presets.json: Situation ohne id/name")
+			return fmt.Errorf("presets.json: situation without id or name")
 		}
 		if ids[s.ID] {
-			return fmt.Errorf("presets.json: doppelte Situation %q", s.ID)
+			return fmt.Errorf("presets.json: duplicate situation %q", s.ID)
 		}
 		ids[s.ID] = true
 		if !cats[s.Category] {
-			return fmt.Errorf("presets.json: Situation %q hat unbekannte Kategorie %q", s.ID, s.Category)
+			return fmt.Errorf("presets.json: situation %q has unknown category %q", s.ID, s.Category)
 		}
 		if len(s.Presets) == 0 {
-			return fmt.Errorf("presets.json: Situation %q hat keine Presets", s.ID)
+			return fmt.Errorf("presets.json: situation %q has no presets", s.ID)
 		}
 		labels := map[string]bool{}
 		for _, p := range s.Presets {
 			l := s.PresetLabel(p)
 			if labels[l] {
-				return fmt.Errorf("presets.json: Situation %q hat doppeltes Preset %q", s.ID, l)
+				return fmt.Errorf("presets.json: situation %q has duplicate preset %q", s.ID, l)
 			}
 			labels[l] = true
 		}
@@ -166,7 +166,7 @@ func (c *Catalog) validate() error {
 	return nil
 }
 
-// Situation sucht eine Situation per ID.
+// Situation looks up a situation by ID.
 func (c *Catalog) Situation(id string) (Situation, bool) {
 	for _, s := range c.Situations {
 		if s.ID == id {
@@ -176,12 +176,12 @@ func (c *Catalog) Situation(id string) (Situation, bool) {
 	return Situation{}, false
 }
 
-// PresetLabel ist der Text im Dropdown, z. B. "Hardstyle ⚡" oder "Mix 💪".
+// PresetLabel is the dropdown text, e.g. "Hardstyle ⚡" or "Mix 💪".
 func (s Situation) PresetLabel(p Preset) string {
 	return strings.TrimSpace(p.Name + " " + s.PresetEmoji(p))
 }
 
-// PresetEmoji liefert das Emoji eines Presets (Fallback: Emoji der Situation).
+// PresetEmoji returns the preset's emoji, falling back to the situation's emoji.
 func (s Situation) PresetEmoji(p Preset) string {
 	if p.Emoji != "" {
 		return p.Emoji
@@ -189,7 +189,7 @@ func (s Situation) PresetEmoji(p Preset) string {
 	return s.Emoji
 }
 
-// PresetLabels listet alle Dropdown-Texte in Reihenfolge.
+// PresetLabels lists all dropdown texts in order.
 func (s Situation) PresetLabels() []string {
 	out := make([]string, len(s.Presets))
 	for i, p := range s.Presets {
@@ -198,17 +198,33 @@ func (s Situation) PresetLabels() []string {
 	return out
 }
 
-// FindPreset sucht ein Preset per Dropdown-Text; unbekannte Werte liefern das erste Preset.
+// FindPreset looks up a preset by its dropdown text. Labels from earlier
+// German versions are recognized. Unknown values return the first preset.
 func (s Situation) FindPreset(label string) (Preset, bool) {
+	label = strings.TrimSpace(label)
+	name := strings.TrimSpace(strings.TrimSuffix(label, s.emojiOf(label)))
+	if en, ok := legacyPresetNames[name]; ok {
+		name = en
+	}
 	for _, p := range s.Presets {
-		if s.PresetLabel(p) == label || strings.EqualFold(p.Name, strings.TrimSpace(label)) {
+		if s.PresetLabel(p) == label || strings.EqualFold(p.Name, label) || strings.EqualFold(p.Name, name) {
 			return p, true
 		}
 	}
 	return s.Presets[0], false
 }
 
-// Recipe kombiniert die Standardwerte der Situation mit dem Preset.
+// emojiOf returns the preset emoji that label ends with, if any.
+func (s Situation) emojiOf(label string) string {
+	for _, p := range s.Presets {
+		if e := s.PresetEmoji(p); e != "" && strings.HasSuffix(label, e) {
+			return e
+		}
+	}
+	return ""
+}
+
+// Recipe combines the situation defaults with the preset.
 func (s Situation) Recipe(p Preset) Recipe {
 	r := s.Defaults.Merge(p.Recipe)
 	if p.Mix && len(p.Genres) == 0 {
@@ -223,7 +239,7 @@ func (s Situation) Recipe(p Preset) Recipe {
 	return r
 }
 
-// Merge überschreibt die Werte von r mit allen gesetzten Werten aus o.
+// Merge overrides the values of r with all values set in o.
 func (r Recipe) Merge(o Recipe) Recipe {
 	if len(o.Genres) > 0 {
 		r.Genres = o.Genres
@@ -261,7 +277,7 @@ func (r Recipe) Merge(o Recipe) Recipe {
 	return r
 }
 
-// UniqueFold entfernt leere Einträge und Duplikate (Groß-/Kleinschreibung egal).
+// UniqueFold removes empty entries and case-insensitive duplicates.
 func UniqueFold(values []string) []string {
 	seen := map[string]bool{}
 	out := make([]string, 0, len(values))

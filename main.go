@@ -1,15 +1,15 @@
-// Cantilune – erstellt täglich automatisch Playlists für Alltagssituationen
-// (Gym, Auto fahren, Kochen, Lernen, …) in Navidrome.
+// Cantilune creates daily playlists for everyday situations (gym, driving,
+// cooking, studying, …) in Navidrome.
 //
-// Aufbau:
-//   - main.go       Plugin-Einstiegspunkte (OnInit, OnCallback)
-//   - config.go     Einstellungen lesen, Jobs pro Situation bilden
-//   - generator.go  Playlists erstellen, alte Versionen entfernen
-//   - selection.go  Song-Auswahl (Filter, Gewichtung, Reihenfolge)
-//   - genres.go     toleranter Abgleich mit den Genres der Bibliothek
-//   - history.go    Verlauf der letzten Tage im KVStore
-//   - subsonic.go   Subsonic-API-Aufrufe
-//   - catalog/      Situationen & Presets (presets.json) und Manifest-Generator
+// Layout:
+//   - main.go       plugin entry points (OnInit, OnCallback)
+//   - config.go     reading settings, building one job per situation
+//   - generator.go  creating playlists, removing previous versions
+//   - selection.go  song selection (filtering, weighting, ordering)
+//   - genres.go     tolerant matching against library genres
+//   - history.go    history of recent days in the key-value store
+//   - subsonic.go   Subsonic API calls
+//   - catalog/      situations and presets (presets.json), manifest generator
 package main
 
 //go:generate go run ./cmd/genmanifest
@@ -36,7 +36,7 @@ const (
 	startupDelaySeconds = 15
 )
 
-// Host-Aufrufe als Variablen, damit Tests sie ersetzen können.
+// Host calls as variables so tests can replace them.
 var (
 	subsonicCall = host.SubsonicAPICall
 	listUsers    = host.UsersGetUsers
@@ -63,7 +63,7 @@ func init() {
 	scheduler.Register(p)
 }
 
-// OnInit wird beim Laden des Plugins und nach jeder Konfigurationsänderung aufgerufen.
+// OnInit is called when the plugin is loaded and after every configuration change.
 func (p *cantilunePlugin) OnInit() error {
 	cat, err := catalog.Load()
 	if err != nil {
@@ -72,43 +72,43 @@ func (p *cantilunePlugin) OnInit() error {
 	cfg := loadSettings(pdk.GetConfig, cat)
 
 	if cfg.RemoveAll {
-		// Aufräum-Modus: keine täglichen Läufe mehr, einmalig alles entfernen.
+		// Cleanup mode: no more daily runs, remove everything once.
 		_ = host.SchedulerCancelSchedule(scheduleIDDaily)
 		if _, err := host.SchedulerScheduleOneTime(startupDelaySeconds, payloadCleanup, scheduleIDStartup); err != nil {
-			return fmt.Errorf("Aufräumen konnte nicht geplant werden: %w", err)
+			return fmt.Errorf("could not schedule cleanup: %w", err)
 		}
-		logf(pdk.LogInfo, "Cantilune pausiert: Alle Cantilune-Playlists werden in %d Sekunden gelöscht", startupDelaySeconds)
+		logf(pdk.LogInfo, "Cantilune paused: all Cantilune playlists will be deleted in %d seconds", startupDelaySeconds)
 		return nil
 	}
 
 	cron, err := cronExpression(cfg)
 	if err != nil {
-		logf(pdk.LogError, "%v – verwende Standard '%s'", err, catalog.DefaultCron)
+		logf(pdk.LogError, "%v, using default '%s'", err, catalog.DefaultCron)
 		cron = catalog.DefaultCron
 	}
 	if _, err := host.SchedulerScheduleRecurring(cron, payloadDaily, scheduleIDDaily); err != nil {
-		// Möglicherweise existiert der Job noch aus einer früheren Instanz.
+		// The job may still exist from a previous instance.
 		_ = host.SchedulerCancelSchedule(scheduleIDDaily)
 		if _, err2 := host.SchedulerScheduleRecurring(cron, payloadDaily, scheduleIDDaily); err2 != nil {
-			return fmt.Errorf("Zeitplan '%s' konnte nicht registriert werden: %w", cron, errors.Join(err, err2))
+			return fmt.Errorf("could not register schedule '%s': %w", cron, errors.Join(err, err2))
 		}
 	}
 
-	logf(pdk.LogInfo, "Cantilune bereit: %d Playlists aktiv (%d Situationen verfügbar), Zeitplan '%s'",
+	logf(pdk.LogInfo, "Cantilune ready: %d playlists enabled (%d situations available), schedule '%s'",
 		len(buildJobs(cat, cfg)), len(cat.Situations)+len(cfg.Custom), cron)
 
 	if cfg.RunOnStartup {
 		if _, err := host.SchedulerScheduleOneTime(startupDelaySeconds, payloadStartup, scheduleIDStartup); err != nil {
-			logf(pdk.LogWarn, "Sofort-Generierung konnte nicht geplant werden: %v", err)
+			logf(pdk.LogWarn, "could not schedule immediate generation: %v", err)
 		}
 	}
 	return nil
 }
 
-// OnCallback wird vom Scheduler ausgelöst.
+// OnCallback is triggered by the scheduler.
 func (p *cantilunePlugin) OnCallback(req scheduler.SchedulerCallbackRequest) error {
 	if req.Payload != payloadDaily && req.Payload != payloadStartup && req.Payload != payloadCleanup {
-		logf(pdk.LogDebug, "Unbekannter Scheduler-Callback ignoriert (id=%s, payload=%s)", req.ScheduleID, req.Payload)
+		logf(pdk.LogDebug, "ignoring unknown scheduler callback (id=%s, payload=%s)", req.ScheduleID, req.Payload)
 		return nil
 	}
 	cat, err := catalog.Load()
@@ -121,7 +121,7 @@ func (p *cantilunePlugin) OnCallback(req scheduler.SchedulerCallbackRequest) err
 		return g.removeAll()
 	}
 	if err := g.run(); err != nil {
-		logf(pdk.LogError, "Playlist-Generierung fehlgeschlagen: %v", err)
+		logf(pdk.LogError, "playlist generation failed: %v", err)
 		return err
 	}
 	return nil

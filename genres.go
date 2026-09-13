@@ -6,7 +6,7 @@ import (
 	"unicode"
 )
 
-// genreAliases vereinheitlicht gängige Schreibweisen (nach normalizeGenre).
+// genreAliases unifies common spellings (after normalizeGenre).
 var genreAliases = map[string]string{
 	"dnb":         "drumandbass",
 	"drumnbass":   "drumandbass",
@@ -19,8 +19,8 @@ var genreAliases = map[string]string{
 	"klassik":     "classical",
 }
 
-// normalizeGenre macht Genre-Namen vergleichbar: "Hip-Hop", "hip hop" und
-// "HipHop" werden zu "hiphop", "Drum & Bass" und "Drum'n'Bass" zu "drumandbass".
+// normalizeGenre makes genre names comparable: "Hip-Hop", "hip hop" and
+// "HipHop" become "hiphop", "Drum & Bass" and "Drum'n'Bass" become "drumandbass".
 func normalizeGenre(s string) string {
 	s = strings.ToLower(s)
 	s = strings.NewReplacer("&", " and ", "'n'", " and ", " n ", " and ", "+", " and ").Replace(s)
@@ -37,9 +37,9 @@ func normalizeGenre(s string) string {
 	return n
 }
 
-// genreMatches prüft, ob ein Bibliotheks-Genre zu einem gewünschten Genre passt
-// (beide normalisiert). Ab 4 Zeichen genügt ein Teiltreffer, sodass z. B.
-// "Hardstyle" auch "Euphoric Hardstyle" und "House" auch "Deep House" findet.
+// genreMatches reports whether a library genre fits a wanted genre (both
+// normalized). From 4 characters on, a partial match is enough, so "Hardstyle"
+// also finds "Euphoric Hardstyle" and "House" finds "Deep House".
 func genreMatches(library, wanted string) bool {
 	if library == "" || wanted == "" {
 		return false
@@ -62,8 +62,8 @@ func matchesAnyGenre(names []string, wanted []string) bool {
 	return false
 }
 
-// resolveGenres ordnet die gewünschten Genres den tatsächlichen Genre-Namen
-// der Bibliothek zu. getRandomSongs erwartet exakte Namen.
+// resolveGenres maps the wanted genres to the actual genre names in the
+// library, because getRandomSongs expects exact names.
 func resolveGenres(library []libraryGenre, wanted []string) (matched []libraryGenre, missing []string) {
 	type hit struct {
 		g     libraryGenre
@@ -107,7 +107,7 @@ func resolveGenres(library []libraryGenre, wanted []string) (matched []libraryGe
 	return matched, missing
 }
 
-// similarGenres schlägt Bibliotheks-Genres vor, die einem fehlenden Genre ähneln.
+// similarGenres suggests library genres similar to a missing genre.
 func similarGenres(library []libraryGenre, wanted string, limit int) []string {
 	r := []rune(normalizeGenre(wanted))
 	if len(r) < 3 {

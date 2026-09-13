@@ -14,29 +14,29 @@ import (
 )
 
 const (
-	maxRandomSongsPerCall = 500 // Obergrenze von getRandomSongs
+	maxRandomSongsPerCall = 500 // limit of getRandomSongs
 	maxTracksPerPlaylist  = 500
 	maxGenresPerPlaylist  = 40
 	maxPoolSize           = 1500
-	poolFactor            = 6   // Kandidaten pro gewünschtem Track
-	interludeMaxSeconds   = 150 // nur kurze "Intro"/"Skit"-Tracks gelten als Zwischenspiel
+	poolFactor            = 6   // candidates per requested track
+	interludeMaxSeconds   = 150 // only short "intro"/"skit" tracks count as interludes
 	day                   = 24 * time.Hour
 )
 
-// Gründe für aussortierte Songs (für das Log).
+// Reasons for filtered songs (for the log).
 const (
-	reasonExcludedGenre = "Genre ausgeschlossen"
-	reasonDisliked      = "mit 1 Stern bewertet"
-	reasonExplicit      = "explizit"
-	reasonDuration      = "Länge"
-	reasonInterlude     = "Intro/Skit"
-	reasonYear          = "Jahr"
+	reasonExcludedGenre = "excluded genre"
+	reasonDisliked      = "rated 1 star"
+	reasonExplicit      = "explicit"
+	reasonDuration      = "duration"
+	reasonInterlude     = "intro/skit"
+	reasonYear          = "year"
 )
 
 type candidate struct {
 	s      song
 	weight float64
-	energy float64 // 0 (ruhig) … 1 (energiegeladen), -1 = unbekannt
+	energy float64 // 0 (calm) … 1 (energetic), -1 = unknown
 	key    float64
 }
 
@@ -52,13 +52,13 @@ type selectionStats struct {
 	Favorites  int
 }
 
-// selectSongs wählt die Songs einer Playlist aus:
-//  1. Kandidaten per getRandomSongs laden (je passendem Bibliotheks-Genre)
-//  2. harte Filter (ausgeschlossene Genres, 1-Stern, explizit, Länge, Intros)
-//  3. Gewichtung nach BPM, Energie (BPM + ReplayGain), Stimmung, Favoriten,
-//     Bewertung, Wiedergaben, zuletzt gehört und Vortags-Playlist
-//  4. gewichtete Zufallsauswahl mit Obergrenze pro Künstler
-//  5. Reihenfolge nach Verlauf (zufällig, ansteigend, abklingend)
+// selectSongs picks the songs of a playlist:
+//  1. load candidates with getRandomSongs (per matching library genre)
+//  2. hard filters (excluded genres, 1 star, explicit, duration, intros)
+//  3. weighting by BPM, energy (BPM + ReplayGain), mood, favorites, rating,
+//     play count, last played and recent playlists
+//  4. weighted random selection with a per-artist limit
+//  5. ordering by flow (random, rising, falling)
 func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selectionStats, error) {
 	st := selectionStats{Rejected: map[string]int{}}
 	pool, err := g.gatherCandidates(job, &st)
@@ -120,7 +120,7 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) ([]song, error
 		return n
 	}
 
-	// Ohne Genres: gesamte Bibliothek (ggf. nach Jahren gefiltert).
+	// Without genres: the whole library (optionally filtered by year).
 	if len(r.Genres) == 0 {
 		for round := 0; round < 3 && len(pool) < target; round++ {
 			size := clamp(target-len(pool), 1, maxRandomSongsPerCall)
@@ -168,7 +168,7 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) ([]song, error
 		}
 		songs, err := fetchRandomSongs(job.User, gen.Name, size, r.FromYear, r.ToYear)
 		if err != nil {
-			logf(pdk.LogWarn, "%s: Songs für Genre %q konnten nicht geladen werden: %v", job.Name, gen.Name, err)
+			logf(pdk.LogWarn, "%s: could not load songs for genre %q: %v", job.Name, gen.Name, err)
 			lastErr = err
 			continue
 		}
@@ -181,7 +181,7 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) ([]song, error
 	return pool, nil
 }
 
-// libraryGenres lädt die Genre-Liste einmal pro Benutzer; nil = nicht verfügbar.
+// libraryGenres loads the genre list once per user; nil = unavailable.
 func (g *generator) libraryGenres(user string) []libraryGenre {
 	key := strings.ToLower(user)
 	if list, ok := g.genreCache[key]; ok {
@@ -189,7 +189,7 @@ func (g *generator) libraryGenres(user string) []libraryGenre {
 	}
 	list, err := fetchGenres(user)
 	if err != nil {
-		logf(pdk.LogWarn, "Genre-Liste nicht verfügbar (%v) – Genres werden ungeprüft verwendet", err)
+		logf(pdk.LogWarn, "genre list unavailable (%v), using genres unchecked", err)
 		list = nil
 	}
 	g.genreCache[key] = list
@@ -197,7 +197,7 @@ func (g *generator) libraryGenres(user string) []libraryGenre {
 }
 
 func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rejected map[string]int) []song {
-	// Globale Ausschlüsse gelten nicht, wenn das Rezept das Genre ausdrücklich verlangt.
+	// Global exclusions do not apply if the recipe explicitly asks for the genre.
 	var excludes []string
 	for _, e := range g.cfg.ExcludeGenres {
 		if !matchesAnyGenre([]string{e}, r.Genres) && !matchesAnyGenre(r.Genres, []string{e}) {
@@ -241,7 +241,7 @@ func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rej
 	return kept
 }
 
-// score berechnet das Auswahlgewicht eines Songs (1 = neutral).
+// score calculates the selection weight of a song (1 = neutral).
 func (g *generator) score(s song, job Job, recent map[string]int, now time.Time) float64 {
 	r := job.Recipe
 	w := 1.0
@@ -285,7 +285,7 @@ func (g *generator) score(s song, job Job, recent map[string]int, now time.Time)
 			}
 		}
 		w *= ratingFactor(s.UserRating, 1.5, 1.2, 0.4)
-	default: // Ausgewogen
+	default: // balanced
 		if starred {
 			w *= 1.8
 		}
@@ -297,7 +297,7 @@ func (g *generator) score(s song, job Job, recent map[string]int, now time.Time)
 		w *= 0.3
 	}
 	if age, ok := recent[s.ID]; ok {
-		w *= repeatFactor(age) // Abwechslung zu den Playlists der letzten Tage
+		w *= repeatFactor(age) // variety compared to recent playlists
 	}
 	w *= bpmFactor(s.BPM, r.MinBPM, r.MaxBPM)
 	w *= moodFactor(s.Moods, r.Moods)
@@ -309,7 +309,7 @@ func (g *generator) score(s song, job Job, recent map[string]int, now time.Time)
 	return math.Max(w, 0.001)
 }
 
-// ratingFactor gewichtet die Sterne-Bewertung des Benutzers (0 = unbewertet).
+// ratingFactor weights the user's star rating (0 = unrated).
 func ratingFactor(rating int, five, four, two float64) float64 {
 	switch rating {
 	case 5:
@@ -322,8 +322,8 @@ func ratingFactor(rating int, five, four, two float64) float64 {
 	return 1
 }
 
-// bpmFactor bevorzugt Songs im BPM-Bereich. Halbe/doppelte BPM zählen mit,
-// da Taggern oft Half-/Double-Time erkennen (z. B. Hardstyle 75 statt 150).
+// bpmFactor prefers songs within the BPM range. Half and double BPM count as
+// well, because taggers often detect half or double time (e.g. 75 instead of 150).
 func bpmFactor(bpm, minBPM, maxBPM int) float64 {
 	if bpm <= 0 || (minBPM <= 0 && maxBPM <= 0) {
 		return 1
@@ -366,8 +366,8 @@ func moodFactor(songMoods, wanted []string) float64 {
 	return 0.6
 }
 
-// songEnergy schätzt die Energie aus BPM und ReplayGain (laut gemasterte Songs
-// haben stark negative Gain-Werte). -1, wenn keine Daten vorliegen.
+// songEnergy estimates energy from BPM and ReplayGain (loudly mastered songs
+// have strongly negative gain values). Returns -1 if no data is available.
 func songEnergy(s song) float64 {
 	sum, n := 0.0, 0
 	if s.BPM > 0 {
@@ -410,8 +410,8 @@ func energyFactor(target string, e float64) float64 {
 	return 1
 }
 
-// pick zieht gewichtet ohne Zurücklegen (Efraimidis-Spirakis) und begrenzt
-// die Songs pro Künstler; reicht das nicht, wird ohne Grenze aufgefüllt.
+// pick draws weighted samples without replacement (Efraimidis-Spirakis) and
+// limits songs per artist; if that is not enough, it fills up without the limit.
 func (g *generator) pick(cands []candidate, count int) []candidate {
 	for i := range cands {
 		u := g.rng.Float64()
@@ -450,7 +450,7 @@ func (g *generator) pick(cands []candidate, count int) []candidate {
 	return chosen
 }
 
-// order sortiert nach Verlauf und verteilt gleiche Künstler.
+// order sorts by flow and spreads out songs by the same artist.
 func (g *generator) order(chosen []candidate, flow string) []song {
 	sorted := false
 	if flow == catalog.FlowRising || flow == catalog.FlowFalling {
@@ -488,7 +488,7 @@ func (g *generator) order(chosen []candidate, flow string) []song {
 	return songs
 }
 
-// spreadArtists vermeidet denselben Künstler direkt hintereinander.
+// spreadArtists avoids the same artist twice in a row.
 func spreadArtists(songs []song) {
 	const window = 8
 	for i := 1; i < len(songs); i++ {
@@ -530,15 +530,15 @@ func clamp01(v float64) float64 {
 	return math.Max(0, math.Min(1, v))
 }
 
-// summary fasst die Auswahl für das Log zusammen.
+// summary describes the selection for the log.
 func (st selectionStats) summary(chosen int) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d Songs", chosen)
+	fmt.Fprintf(&b, "%d songs", chosen)
 	if len(st.Genres) > 0 {
 		names := make([]string, 0, 8)
 		for i, g := range st.Genres {
 			if i == 8 {
-				names = append(names, fmt.Sprintf("+%d weitere", len(st.Genres)-8))
+				names = append(names, fmt.Sprintf("+%d more", len(st.Genres)-8))
 				break
 			}
 			if g.SongCount > 0 {
@@ -550,9 +550,9 @@ func (st selectionStats) summary(chosen int) string {
 		fmt.Fprintf(&b, " · Genres: %s", strings.Join(names, ", "))
 	}
 	if len(st.Missing) > 0 {
-		fmt.Fprintf(&b, " · nicht in der Bibliothek: %s", strings.Join(st.Missing, ", "))
+		fmt.Fprintf(&b, " · not in library: %s", strings.Join(st.Missing, ", "))
 	}
-	fmt.Fprintf(&b, " · Kandidaten: %d", st.Candidates)
+	fmt.Fprintf(&b, " · candidates: %d", st.Candidates)
 	if len(st.Rejected) > 0 {
 		keys := make([]string, 0, len(st.Rejected))
 		for k := range st.Rejected {
@@ -563,13 +563,13 @@ func (st selectionStats) summary(chosen int) string {
 		for i, k := range keys {
 			parts[i] = fmt.Sprintf("%s %d", k, st.Rejected[k])
 		}
-		fmt.Fprintf(&b, " · aussortiert: %s", strings.Join(parts, ", "))
+		fmt.Fprintf(&b, " · filtered: %s", strings.Join(parts, ", "))
 	}
 	if st.Relaxed {
-		b.WriteString(" (Längen-/Intro-Filter gelockert)")
+		b.WriteString(" (duration/intro filters relaxed)")
 	}
 	if chosen > 0 {
-		fmt.Fprintf(&b, " · Metadaten: %d mit BPM, %d mit ReplayGain, %d Favoriten", st.WithBPM, st.WithGain, st.Favorites)
+		fmt.Fprintf(&b, " · metadata: %d with BPM, %d with ReplayGain, %d favorites", st.WithBPM, st.WithGain, st.Favorites)
 	}
 	return b.String()
 }

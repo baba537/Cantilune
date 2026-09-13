@@ -39,7 +39,7 @@ func mapConfig(m map[string]string) configSource {
 	}
 }
 
-// onlyEnabled liefert eine Konfiguration, in der nur die genannten Situationen aktiv sind.
+// onlyEnabled returns a configuration in which only the given situations are enabled.
 func onlyEnabled(cat *catalog.Catalog, presets map[string]string) map[string]string {
 	cfg := map[string]string{}
 	for _, s := range cat.Situations {
@@ -53,8 +53,8 @@ func onlyEnabled(cat *catalog.Catalog, presets map[string]string) map[string]str
 func TestBuildPlaylistName(t *testing.T) {
 	cases := []struct{ prefix, situation, variant, emoji, want string }{
 		{"🎧", "Gym", "Hardstyle", "⚡", "🎧 Gym Hardstyle ⚡"},
-		{"🎧", "Auto fahren", "", "🚗", "🎧 Auto fahren 🚗"},
-		{"[CL]", " Lernen ", "", "", "[CL] Lernen"},
+		{"🎧", "Driving", "", "🚗", "🎧 Driving 🚗"},
+		{"[CL]", " Studying ", "", "", "[CL] Studying"},
 	}
 	for _, c := range cases {
 		if got := buildPlaylistName(c.prefix, c.situation, c.variant, c.emoji); got != c.want {
@@ -94,17 +94,17 @@ func TestResolveGenresIsTolerant(t *testing.T) {
 	}
 	for _, want := range []string{"Hardstyle", "Euphoric Hardstyle", "Hip Hop", "Drum'n'Bass", "Pop", "R&B"} {
 		if !names[want] {
-			t.Errorf("%q wurde nicht zugeordnet: %v", want, matched)
+			t.Errorf("%q was not matched: %v", want, matched)
 		}
 	}
 	if names["K-Pop"] || names["Rock"] {
-		t.Errorf("falsche Zuordnung: %v", matched)
+		t.Errorf("wrong match: %v", matched)
 	}
 	if len(missing) != 1 || missing[0] != "Rawstyle" {
 		t.Errorf("missing = %v", missing)
 	}
 	if matched[0].Name != "Hardstyle" && matched[0].Name != "Hip Hop" && matched[0].Name != "Pop" {
-		t.Errorf("exakte Treffer sollten zuerst kommen: %v", matched)
+		t.Errorf("exact matches should come first: %v", matched)
 	}
 }
 
@@ -114,8 +114,8 @@ func TestBPMFactorHalfAndDoubleTime(t *testing.T) {
 		want          float64
 	}{
 		{150, 140, 180, 1.6},
-		{75, 140, 180, 1.6}, // Half-Time-Tag
-		{170, 85, 100, 1.6}, // Double-Time-Tag
+		{75, 140, 180, 1.6}, // half-time tag
+		{170, 85, 100, 1.6}, // double-time tag
 		{100, 140, 180, 0.3},
 		{0, 140, 180, 1},
 		{120, 0, 0, 1},
@@ -132,10 +132,10 @@ func TestParseMarker(t *testing.T) {
 		comment, id, fp string
 		ok              bool
 	}{
-		{"Automatisch erstellt von Cantilune · Gym · Hardstyle ⚡ · Ausgewogen · #cl:gym:1a2b3c4d", "gym", "1a2b3c4d", true},
-		{"#cl:custom-meine-liste:ff00aa11", "custom-meine-liste", "ff00aa11", true},
+		{"Created by Cantilune · Gym · Hardstyle ⚡ · Balanced · #cl:gym:1a2b3c4d", "gym", "1a2b3c4d", true},
+		{"#cl:custom-my-list:ff00aa11", "custom-my-list", "ff00aa11", true},
 		{"Automatisch erstellt von NaviBeat · #nb:party:cafebabe", "party", "cafebabe", true},
-		{"meine Playlist", "", "", false},
+		{"my playlist", "", "", false},
 	}
 	for _, c := range cases {
 		id, fp, ok := parseMarker(c.comment)
@@ -168,39 +168,57 @@ func TestSettingsAndJobs(t *testing.T) {
 
 	jobs := buildJobs(cat, loadSettings(mapConfig(nil), cat))
 	if len(jobs) != 10 {
-		t.Fatalf("erwartet 10 Standard-Playlists, got %d", len(jobs))
+		t.Fatalf("expected 10 default playlists, got %d", len(jobs))
 	}
 	if jobs[0].ID != "gym" || jobs[0].Name != "🎧 Gym 💪" || jobs[0].Mode != catalog.ModeBalanced || jobs[0].Count != 50 {
-		t.Errorf("unerwarteter Gym-Job: %+v", jobs[0])
+		t.Errorf("unexpected gym job: %+v", jobs[0])
 	}
 
 	cfg := onlyEnabled(cat, map[string]string{"gym": "Hardstyle ⚡", "laufen": "Drum & Bass 🥁"})
-	cfg[catalog.KeyCustomSituations] = `[{"name":"Meine Liste","emoji":"🎮","genres":["Synthwave"],"energy":"energiegeladen","flow":"ansteigend","mode":"Entdecken","trackCount":20}]`
+	cfg[catalog.KeyCustomSituations] = `[{"name":"My List","emoji":"🎮","genres":["Synthwave"],"energy":"energetic","flow":"rising","mode":"Discover","trackCount":20}]`
 	jobs = buildJobs(cat, loadSettings(mapConfig(cfg), cat))
 	if len(jobs) != 3 {
-		t.Fatalf("erwartet 3 Jobs, got %d: %+v", len(jobs), jobs)
+		t.Fatalf("expected 3 jobs, got %d: %+v", len(jobs), jobs)
 	}
 	if jobs[0].Name != "🎧 Gym Hardstyle ⚡" || jobs[0].Recipe.MinBPM != 140 {
-		t.Errorf("Gym-Preset nicht übernommen: %+v", jobs[0])
+		t.Errorf("gym preset not applied: %+v", jobs[0])
 	}
-	if jobs[1].Name != "🎧 Laufen Drum & Bass 🥁" {
-		t.Errorf("Laufen-Name: %q", jobs[1].Name)
+	if jobs[1].Name != "🎧 Running Drum & Bass 🥁" {
+		t.Errorf("running name: %q", jobs[1].Name)
 	}
 	c := jobs[2]
-	if c.ID != "custom-meine-liste" || c.Name != "🎧 Meine Liste 🎮" || c.Recipe.Energy != catalog.EnergyHigh ||
+	if c.ID != "custom-my-list" || c.Name != "🎧 My List 🎮" || c.Recipe.Energy != catalog.EnergyHigh ||
 		c.Recipe.Flow != catalog.FlowRising || c.Mode != catalog.ModeDiscover || c.Count != 20 {
-		t.Errorf("eigene Situation falsch: %+v", c)
+		t.Errorf("wrong custom situation: %+v", c)
 	}
 
 	cfg[catalog.KeyShowPresetInName] = "false"
 	jobs = buildJobs(cat, loadSettings(mapConfig(cfg), cat))
 	if jobs[0].Name != "🎧 Gym ⚡" {
-		t.Errorf("Preset-Name sollte ausgeblendet sein: %q", jobs[0].Name)
+		t.Errorf("preset name should be hidden: %q", jobs[0].Name)
+	}
+}
+
+// Settings saved by earlier German versions keep their meaning.
+func TestLegacyGermanSettings(t *testing.T) {
+	cat := mustCatalog(t)
+	cfg := onlyEnabled(cat, map[string]string{"lernen": "Klassik 🎻"})
+	cfg["lernen"] = `{"enabled":true,"preset":"Klassik 🎻","mode":"Lieblingssongs"}`
+	cfg[catalog.KeyCustomSituations] = `[{"name":"Meine Liste","genres":["Synthwave"],"energy":"energiegeladen","flow":"ansteigend","mode":"Entdecken"}]`
+	jobs := buildJobs(cat, loadSettings(mapConfig(cfg), cat))
+	if len(jobs) != 2 {
+		t.Fatalf("expected 2 jobs, got %d", len(jobs))
+	}
+	if jobs[0].Name != "🎧 Studying Classical 🎻" || jobs[0].Mode != catalog.ModeFavorites {
+		t.Errorf("legacy preset or mode not migrated: %+v", jobs[0])
+	}
+	if c := jobs[1]; c.Recipe.Energy != catalog.EnergyHigh || c.Recipe.Flow != catalog.FlowRising || c.Mode != catalog.ModeDiscover {
+		t.Errorf("legacy custom situation not migrated: %+v", c)
 	}
 }
 
 // ---------------------------------------------------------------------------
-// Simulierter Navidrome-Server
+// Simulated Navidrome server
 // ---------------------------------------------------------------------------
 
 type fakePlaylist struct {
@@ -345,7 +363,7 @@ func (f *fakeServer) call(uri string) (string, error) {
 			}
 		}
 	default:
-		return "", fmt.Errorf("unerwarteter Endpunkt %s", endpoint)
+		return "", fmt.Errorf("unexpected endpoint %s", endpoint)
 	}
 	b, _ := json.Marshal(map[string]any{"subsonic-response": resp})
 	return string(b), nil
@@ -362,7 +380,7 @@ func useFake(t *testing.T, f *fakeServer) {
 	}
 	kvSetTTL = func(key string, value []byte, ttl int64) error {
 		if ttl <= 0 {
-			return fmt.Errorf("ttl muss > 0 sein")
+			return fmt.Errorf("ttl must be > 0")
 		}
 		f.kv[key] = value
 		return nil
@@ -414,7 +432,7 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 	job := Job{ID: "test", Name: "t", User: "admin", Count: 30, Recipe: catalog.Recipe{Genres: []string{"Rock"}}}
 	defer func() { nowFn = func() time.Time { return testNow } }()
 
-	// Wiederholungen über 14 Tage (je 30 aus 200 Songs), gemittelt über mehrere Durchläufe.
+	// Repeats over 14 days (30 of 200 songs each), summed over several runs.
 	repeats := func(historyDays int) int {
 		total := 0
 		for run := 0; run < 5; run++ {
@@ -428,7 +446,7 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 				g := newGenerator(cat, Settings{MaxPerArtist: 3, HistoryDays: historyDays}, false)
 				ids, _, err := g.selectSongs(job, g.loadHistory(job.ID))
 				if err != nil || len(ids) != 30 {
-					t.Fatalf("Tag %d: %d Songs, %v", d, len(ids), err)
+					t.Fatalf("day %d: %d songs, %v", d, len(ids), err)
 				}
 				for _, id := range ids {
 					if d > 0 && seen[id] {
@@ -437,7 +455,7 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 				}
 				seen = map[string]bool{}
 				for _, id := range ids {
-					seen[id] = true // nur Wiederholungen zum Vortag zählen
+					seen[id] = true // only count repeats compared to the previous day
 				}
 				g.saveHistory(job.ID, ids)
 			}
@@ -445,20 +463,19 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 		return total
 	}
 	with, without := repeats(7), repeats(0)
-	t.Logf("Wiederholungen zum Vortag (5×14 Tage): %d mit Verlauf, %d ohne", with, without)
-	// Ohne Verlauf wiederholen sich im Schnitt ~4–5 Songs pro Tag, mit Verlauf deutlich weniger.
+	t.Logf("repeats compared to the previous day (5×14 days): %d with history, %d without", with, without)
+	// Without history, about 4-5 songs repeat per day; with history clearly fewer.
 	if with*2 > without {
-		t.Errorf("Verlauf wirkt zu schwach: %d Wiederholungen mit, %d ohne Verlauf", with, without)
+		t.Errorf("history has too little effect: %d repeats with, %d without", with, without)
 	}
 	if len(f.kv) != 0 {
-		t.Errorf("mit historyDays=0 darf nichts gespeichert werden: %d Einträge", len(f.kv))
+		t.Errorf("nothing may be stored with historyDays=0: %d entries", len(f.kv))
 	}
 
-	// Verlauf ausgeschaltet: nichts speichern.
 	g := newGenerator(cat, Settings{HistoryDays: 0}, false)
-	g.saveHistory("aus", []string{"x"})
-	if _, ok := f.kv[historyKey("aus", testNow)]; ok {
-		t.Error("Verlauf trotz historyDays=0 gespeichert")
+	g.saveHistory("off", []string{"x"})
+	if _, ok := f.kv[historyKey("off", testNow)]; ok {
+		t.Error("history stored although historyDays=0")
 	}
 }
 
@@ -468,8 +485,8 @@ func TestRemoveAllDeletesOnlyCantilunePlaylists(t *testing.T) {
 	f.playlists = []*fakePlaylist{
 		{playlist: playlist{ID: "a", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "#cl:gym:1"}},
 		{playlist: playlist{ID: "b", Name: "🎧 Party 🎉", Owner: "bob", Comment: "#cl:party:2"}},
-		{playlist: playlist{ID: "c", Name: "🎧 Kochen 🍳", Owner: "admin", Comment: "#nb:kochen:3"}},
-		{playlist: playlist{ID: "d", Name: "🎧 Meine eigene", Owner: "admin"}},
+		{playlist: playlist{ID: "c", Name: "🎧 Cooking 🍳", Owner: "admin", Comment: "#nb:kochen:3"}},
+		{playlist: playlist{ID: "d", Name: "🎧 My own", Owner: "admin"}},
 	}
 	useFake(t, f)
 	f.kv[historyKey("gym", testNow)] = []byte("x")
@@ -478,23 +495,23 @@ func TestRemoveAllDeletesOnlyCantilunePlaylists(t *testing.T) {
 	cfg[catalog.KeyRemoveAll] = "true"
 	settings := loadSettings(mapConfig(cfg), cat)
 	if !settings.RemoveAll {
-		t.Fatal("RemoveAll nicht gelesen")
+		t.Fatal("RemoveAll not read")
 	}
 	if err := newGenerator(cat, settings, false).removeAll(); err != nil {
 		t.Fatal(err)
 	}
 	if len(f.playlists) != 1 || f.playlists[0].ID != "d" {
-		t.Errorf("erwartet nur die eigene Playlist, got %+v", f.playlists)
+		t.Errorf("expected only the user's own playlist, got %+v", f.playlists)
 	}
 	if len(f.kv) != 0 {
-		t.Errorf("Verlauf nicht gelöscht: %v", f.kv)
+		t.Errorf("history not deleted: %v", f.kv)
 	}
 }
 
 func TestGeneratorRun(t *testing.T) {
 	cat := mustCatalog(t)
 	f := newFakeServer()
-	// Hardstyle mit gemischten BPM-Tags (auch Half-Time) und einigen Intros.
+	// Hardstyle with mixed BPM tags (including half time) and a few intros.
 	f.addSongs("Euphoric Hardstyle", 90, func(i int, s *song) {
 		s.BPM = []int{150, 75, 0}[i%3]
 		if i < 5 {
@@ -503,17 +520,17 @@ func TestGeneratorRun(t *testing.T) {
 	})
 	f.addSongs("Hip Hop", 80, nil)
 	f.addSongs("Rock", 60, func(i int, s *song) { s.Year = 1985 + i%15 })
-	f.addSongs("Hörbuch", 40, func(i int, s *song) { s.Year = 1990 })
+	f.addSongs("Audiobook", 40, func(i int, s *song) { s.Year = 1990 })
 	f.playlists = []*fakePlaylist{
 		{playlist: playlist{ID: "old-gym", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "Cantilune · #cl:gym:deadbeef", Created: testNow.Add(-24 * time.Hour)},
 			songIDs: []string{"euphorichardstyle-6", "euphorichardstyle-7"}},
 		{playlist: playlist{ID: "old-party", Name: "🎧 Party 🎉", Owner: "admin", Comment: "#nb:party:cafebabe"}},
-		{playlist: playlist{ID: "mine", Name: "🎧 Meine Liste", Owner: "admin"}},
-		{playlist: playlist{ID: "bobs", Name: "Bobs Liste", Owner: "bob", Comment: "privat"}},
+		{playlist: playlist{ID: "mine", Name: "🎧 My List", Owner: "admin"}},
+		{playlist: playlist{ID: "bobs", Name: "Bob's List", Owner: "bob", Comment: "private"}},
 	}
 	useFake(t, f)
 
-	cfg := onlyEnabled(cat, map[string]string{"gym": "Hardstyle ⚡", "autoFahren": "80er & 90er 📼"})
+	cfg := onlyEnabled(cat, map[string]string{"gym": "Hardstyle ⚡", "autoFahren": "80s & 90s 📼"})
 	settings := loadSettings(mapConfig(cfg), cat)
 	if err := newGenerator(cat, settings, false).run(); err != nil {
 		t.Fatalf("run: %v", err)
@@ -521,75 +538,75 @@ func TestGeneratorRun(t *testing.T) {
 
 	gym := f.byName("🎧 Gym Hardstyle ⚡")
 	if len(gym) != 1 || gym[0].ID == "old-gym" {
-		t.Fatalf("erwartet genau eine neue Gym-Playlist, got %+v", gym)
+		t.Fatalf("expected exactly one new gym playlist, got %+v", gym)
 	}
 	if len(gym[0].songIDs) != 50 || !gym[0].public {
-		t.Errorf("Gym-Playlist: %d Songs, öffentlich=%v", len(gym[0].songIDs), gym[0].public)
+		t.Errorf("gym playlist: %d songs, public=%v", len(gym[0].songIDs), gym[0].public)
 	}
 	if id, _, ok := parseMarker(gym[0].Comment); !ok || id != "gym" {
-		t.Errorf("Marker fehlt im Kommentar: %q", gym[0].Comment)
+		t.Errorf("marker missing in comment: %q", gym[0].Comment)
 	}
 	perArtist := map[string]int{}
 	for _, id := range gym[0].songIDs {
 		if !strings.HasPrefix(id, "euphorichardstyle-") {
-			t.Errorf("Song %s ist kein Hardstyle", id)
+			t.Errorf("song %s is not hardstyle", id)
 		}
 		n, _ := strconv.Atoi(strings.TrimPrefix(id, "euphorichardstyle-"))
 		if n < 5 {
-			t.Errorf("Intro %s wurde ausgewählt", id)
+			t.Errorf("intro %s was selected", id)
 		}
 		perArtist[fmt.Sprint(n%20)]++
 	}
 	for a, n := range perArtist {
 		if n > settings.MaxPerArtist {
-			t.Errorf("Künstler %s kommt %d-mal vor", a, n)
+			t.Errorf("artist %s appears %d times", a, n)
 		}
 	}
 	if create, del := f.callIndex("createPlaylist?"+url.Values{"name": {"🎧 Gym Hardstyle ⚡"}}.Encode()), f.callIndex("deletePlaylist?id=old-gym"); create < 0 || del < create {
-		t.Errorf("alte Gym-Playlist muss nach dem Erstellen der neuen gelöscht werden (create=%d, delete=%d)", create, del)
+		t.Errorf("old gym playlist must be deleted after the new one is created (create=%d, delete=%d)", create, del)
 	}
 
-	auto := f.byName("🎧 Auto fahren 80er & 90er 📼")
-	if len(auto) != 1 {
-		t.Fatalf("Auto-Playlist fehlt: %+v", f.playlists)
+	driving := f.byName("🎧 Driving 80s & 90s 📼")
+	if len(driving) != 1 {
+		t.Fatalf("driving playlist missing: %+v", f.playlists)
 	}
-	for _, id := range auto[0].songIDs {
-		if strings.HasPrefix(id, "hörbuch") || !strings.HasPrefix(id, "rock-") {
-			t.Errorf("Auto-Playlist enthält %s", id)
+	for _, id := range driving[0].songIDs {
+		if !strings.HasPrefix(id, "rock-") {
+			t.Errorf("driving playlist contains %s", id)
 		}
 	}
 
 	for _, gone := range []string{"old-gym", "old-party"} {
 		for _, p := range f.playlists {
 			if p.ID == gone {
-				t.Errorf("Playlist %s hätte gelöscht werden müssen", gone)
+				t.Errorf("playlist %s should have been deleted", gone)
 			}
 		}
 	}
-	if len(f.byName("🎧 Meine Liste")) != 1 || len(f.byName("Bobs Liste")) != 1 {
-		t.Error("fremde Playlists wurden verändert")
+	if len(f.byName("🎧 My List")) != 1 || len(f.byName("Bob's List")) != 1 {
+		t.Error("other playlists were modified")
 	}
 
-	// Sofort-Lauf ohne Änderungen: nichts neu erzeugen.
+	// Startup run without changes: nothing is regenerated.
 	f.calls = nil
 	if err := newGenerator(cat, settings, true).run(); err != nil {
 		t.Fatalf("startup run: %v", err)
 	}
 	if f.callIndex("createPlaylist") >= 0 || f.callIndex("deletePlaylist") >= 0 {
-		t.Errorf("unveränderte Playlists wurden neu erzeugt: %v", f.calls)
+		t.Errorf("unchanged playlists were regenerated: %v", f.calls)
 	}
 
-	// Preset gewechselt: nur Gym wird neu erzeugt, die Hardstyle-Playlist verschwindet.
-	cfg = onlyEnabled(cat, map[string]string{"gym": "HipHop 🎤", "autoFahren": "80er & 90er 📼"})
+	// Preset changed: only gym is regenerated and the hardstyle playlist disappears.
+	cfg = onlyEnabled(cat, map[string]string{"gym": "HipHop 🎤", "autoFahren": "80s & 90s 📼"})
 	f.calls = nil
 	if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), true).run(); err != nil {
-		t.Fatalf("startup run nach Änderung: %v", err)
+		t.Fatalf("startup run after change: %v", err)
 	}
 	if len(f.byName("🎧 Gym HipHop 🎤")) != 1 || len(f.byName("🎧 Gym Hardstyle ⚡")) != 0 {
-		t.Errorf("Preset-Wechsel nicht umgesetzt: %v", f.playlists)
+		t.Errorf("preset change not applied: %v", f.playlists)
 	}
 	if strings.Count(strings.Join(f.calls, "\n"), "createPlaylist") != 1 {
-		t.Errorf("erwartet genau eine neue Playlist: %v", f.calls)
+		t.Errorf("expected exactly one new playlist: %v", f.calls)
 	}
 }
 
@@ -598,15 +615,15 @@ func TestNoMatchingGenreKeepsOldPlaylist(t *testing.T) {
 	f := newFakeServer()
 	f.addSongs("Hardstyle Classics", 10, nil)
 	f.playlists = []*fakePlaylist{
-		{playlist: playlist{ID: "old", Name: "🎧 Lernen Klassik 🎻", Owner: "admin", Comment: "#cl:lernen:x"}},
+		{playlist: playlist{ID: "old", Name: "🎧 Studying Classical 🎻", Owner: "admin", Comment: "#cl:lernen:x"}},
 	}
 	useFake(t, f)
-	cfg := onlyEnabled(cat, map[string]string{"lernen": "Klassik 🎻"})
+	cfg := onlyEnabled(cat, map[string]string{"lernen": "Classical 🎻"})
 	if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false).run(); err == nil {
-		t.Error("erwartet Fehler, da keine Playlist erstellt wurde")
+		t.Error("expected an error because no playlist was created")
 	}
-	if len(f.byName("🎧 Lernen Klassik 🎻")) != 1 {
-		t.Error("bisherige Playlist darf ohne Ersatz nicht gelöscht werden")
+	if len(f.byName("🎧 Studying Classical 🎻")) != 1 {
+		t.Error("the previous playlist must not be deleted without a replacement")
 	}
 }
 
@@ -625,7 +642,7 @@ func TestFavoritesModePrefersStarredSongs(t *testing.T) {
 		g := newGenerator(cat, Settings{MaxPerArtist: 3, SkipInterludes: true}, false)
 		ids, _, err := g.selectSongs(Job{Name: "t", User: "admin", Count: 30, Mode: mode, Recipe: catalog.Recipe{Genres: []string{"Rock"}}}, nil)
 		if err != nil || len(ids) != 30 {
-			t.Fatalf("%s: %d Songs, %v", mode, len(ids), err)
+			t.Fatalf("%s: %d songs, %v", mode, len(ids), err)
 		}
 		n := 0
 		for _, id := range ids {
@@ -637,7 +654,7 @@ func TestFavoritesModePrefersStarredSongs(t *testing.T) {
 	}
 	fav, balanced := starredIn(catalog.ModeFavorites), starredIn(catalog.ModeBalanced)
 	if fav < 12 || fav <= balanced {
-		t.Errorf("Lieblingssongs-Modus: %d Favoriten, Ausgewogen: %d", fav, balanced)
+		t.Errorf("favorites mode: %d favorites, balanced: %d", fav, balanced)
 	}
 }
 
@@ -646,7 +663,7 @@ func TestSpreadArtists(t *testing.T) {
 	spreadArtists(songs)
 	for i := 1; i < len(songs); i++ {
 		if songs[i].Artist == songs[i-1].Artist {
-			t.Errorf("gleicher Künstler hintereinander: %+v", songs)
+			t.Errorf("same artist twice in a row: %+v", songs)
 		}
 	}
 }

@@ -22,19 +22,19 @@ jobs:
         with:
           tinygo-version: "0.42.0"
 
-      - name: Abhängigkeiten auflösen
+      - name: Resolve dependencies
         run: go mod tidy
 
       - name: Tests
         run: go test ./...
 
-      - name: Paket bauen
+      - name: Build package
         run: make package VERSION="${GITHUB_REF_NAME#v}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
 
-      - name: Paketinhalt anzeigen
+      - name: Show package contents
         run: unzip -l dist/cantilune.ndp && jq '{name, version, website}' dist/manifest.json
 
-      - name: Release-Notizen aus dem Changelog
+      - name: Release notes from changelog
         run: |
           version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" 'index($0, "## [" v "]") == 1 {found=1; next} /^## \[/ {found=0} found' CHANGELOG.md > dist/release-notes.md
@@ -45,7 +45,7 @@ jobs:
             "${{ github.server_url }}" "${{ github.repository }}" >> dist/release-notes.md
           cat dist/release-notes.md
 
-      - name: GitHub Release erstellen
+      - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/cantilune.ndp

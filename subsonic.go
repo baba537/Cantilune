@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-// song enthält die Metadaten, die Navidrome über die (Open)Subsonic-API liefert:
-// Tags aus den Dateien (Genre, Jahr, BPM, Mood, ReplayGain, Explicit) sowie
-// Nutzungsdaten, die Navidrome selbst erfasst (Wiedergaben, Favoriten, Bewertung).
+// song holds the metadata Navidrome provides through the (Open)Subsonic API:
+// file tags (genre, year, BPM, mood, ReplayGain, explicit) and usage data
+// recorded by Navidrome itself (play count, favorites, rating).
 type song struct {
 	ID             string     `json:"id"`
 	Title          string     `json:"title"`
@@ -73,7 +73,7 @@ type subsonicResponse struct {
 	} `json:"genres"`
 }
 
-// callAPI führt einen Subsonic-Aufruf im Namen von user aus und prüft den Status.
+// callAPI performs a Subsonic call on behalf of user and checks the status.
 func callAPI(user, endpoint string, q url.Values) (*subsonicResponse, error) {
 	if q == nil {
 		q = url.Values{}
@@ -87,12 +87,12 @@ func callAPI(user, endpoint string, q url.Values) (*subsonicResponse, error) {
 		Response subsonicResponse `json:"subsonic-response"`
 	}
 	if err := json.Unmarshal([]byte(raw), &env); err != nil {
-		return nil, fmt.Errorf("%s: ungültige Antwort: %w", endpoint, err)
+		return nil, fmt.Errorf("%s: invalid response: %w", endpoint, err)
 	}
 	if env.Response.Status != "ok" {
-		msg := "unbekannter Fehler"
+		msg := "unknown error"
 		if e := env.Response.Error; e != nil {
-			msg = fmt.Sprintf("%s (Code %d)", e.Message, e.Code)
+			msg = fmt.Sprintf("%s (code %d)", e.Message, e.Code)
 		}
 		return nil, fmt.Errorf("%s: %s", endpoint, msg)
 	}
@@ -110,7 +110,7 @@ func fetchGenres(user string) ([]libraryGenre, error) {
 	return resp.Genres.Genre, nil
 }
 
-// fetchRandomSongs ruft bis zu size zufällige Songs ab (optional nach Genre und Jahren gefiltert).
+// fetchRandomSongs requests up to size random songs, optionally filtered by genre and years.
 func fetchRandomSongs(user, genre string, size, fromYear, toYear int) ([]song, error) {
 	q := url.Values{}
 	q.Set("size", strconv.Itoa(clamp(size, 1, maxRandomSongsPerCall)))
@@ -166,7 +166,7 @@ func fetchPlaylistSongIDs(user, id string) ([]string, error) {
 	return ids, nil
 }
 
-// createPlaylist legt eine Playlist an und liefert deren ID.
+// createPlaylist creates a playlist and returns its ID.
 func createPlaylist(user, name string, songIDs []string) (string, error) {
 	q := url.Values{}
 	q.Set("name", name)
@@ -180,10 +180,10 @@ func createPlaylist(user, name string, songIDs []string) (string, error) {
 	if resp.Playlist != nil && resp.Playlist.ID != "" {
 		return resp.Playlist.ID, nil
 	}
-	// Ältere Server liefern die Playlist nicht zurück: neueste mit diesem Namen suchen.
+	// Older servers do not return the playlist, so look up the newest one with this name.
 	lists, err := fetchOwnPlaylists(user)
 	if err != nil {
-		return "", fmt.Errorf("Playlist erstellt, ID nicht ermittelbar: %w", err)
+		return "", fmt.Errorf("playlist created, but its ID could not be determined: %w", err)
 	}
 	var newest *playlist
 	for i := range lists {
@@ -192,7 +192,7 @@ func createPlaylist(user, name string, songIDs []string) (string, error) {
 		}
 	}
 	if newest == nil {
-		return "", errors.New("Playlist erstellt, aber nicht in getPlaylists gefunden")
+		return "", errors.New("playlist created, but not found in getPlaylists")
 	}
 	return newest.ID, nil
 }

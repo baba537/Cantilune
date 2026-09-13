@@ -10,7 +10,7 @@ all: package
 tidy:
 	go mod tidy
 
-# manifest.json aus catalog/presets.json neu erzeugen
+# regenerate manifest.json from catalog/presets.json
 generate:
 	go generate ./...
 
@@ -21,7 +21,7 @@ build:
 	mkdir -p $(DIST)
 	tinygo build -no-debug -o $(DIST)/plugin.wasm -target wasip1 -buildmode=c-shared .
 
-# Der Dateiname bestimmt die Plugin-ID in Navidrome – daher immer cantilune.ndp (ohne Version).
+# The file name determines the plugin ID in Navidrome, so it is always cantilune.ndp (without version).
 package: build
 	@if command -v jq >/dev/null 2>&1; then \
 		jq --arg v "$(or $(VERSION),0.0.0-dev)" --arg w "$(WEBSITE)" \
@@ -31,7 +31,7 @@ package: build
 		cp manifest.json $(DIST)/manifest.json; \
 	fi
 	cd $(DIST) && rm -f $(PLUGIN).ndp && zip -j $(PLUGIN).ndp manifest.json plugin.wasm
-	@echo "Paket erstellt: $(DIST)/$(PLUGIN).ndp"
+	@echo "Package created: $(DIST)/$(PLUGIN).ndp"
 
 clean:
 	rm -rf $(DIST)
