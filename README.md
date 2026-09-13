@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" width="160" alt="Cantilune">
+  <img src="assets/cantilune-logo.png" width="160" alt="Cantilune">
 </p>
 
 <h1 align="center">Cantilune</h1>
