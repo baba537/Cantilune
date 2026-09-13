@@ -1,0 +1,341 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"hash/fnv"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
+	"github.com/navidrome/navidrome/plugins/pdk/go/pdk"
+
+	"cantilune/catalog"
+)
+
+// Settings ist die vollständig aufgelöste Plugin-Konfiguration.
+type Settings struct {
+	Prefix           string
+	ShowPresetInName bool
+	DefaultUser      string
+	TrackCount       int
+	PublicPlaylists  bool
+	GenerationTime   string
+	CronExpression   string
+	RunOnStartup     bool
+	MaxPerArtist     int
+	AvoidRecentDays  int
+	HistoryDays      int
+	SkipInterludes   bool
+	RemoveAll        bool
+	ExcludeGenres    []string
+	Situations       map[string]situationConfig
+	Custom           []customSituation
+}
+
+// situationConfig ist die Web-UI-Zeile einer eingebauten Situation.
+type situationConfig struct {
+	Enabled    *bool  `json:"enabled"`
+	Preset     string `json:"preset"`
+	Mode       string `json:"mode"`
+	TrackCount int    `json:"trackCount"`
+	TargetUser string `json:"targetUser"`
+}
+
+// customSituation ist eine selbst angelegte Situation.
+type customSituation struct {
+	Enabled         *bool    `json:"enabled"`
+	Name            string   `json:"name"`
+	Emoji           string   `json:"emoji"`
+	Genres          []string `json:"genres"`
+	ExcludeGenres   []string `json:"excludeGenres"`
+	Moods           []string `json:"moods"`
+	MinBPM          int      `json:"minBpm"`
+	MaxBPM          int      `json:"maxBpm"`
+	FromYear        int      `json:"fromYear"`
+	ToYear          int      `json:"toYear"`
+	Energy          string   `json:"energy"`
+	Flow            string   `json:"flow"`
+	Mode            string   `json:"mode"`
+	ExcludeExplicit bool     `json:"excludeExplicit"`
+	TrackCount      int      `json:"trackCount"`
+	TargetUser      string   `json:"targetUser"`
+}
+
+// Job ist eine konkret zu erzeugende Playlist.
+type Job struct {
+	ID          string // "gym" bzw. "custom-<name>"
+	Title       string // "Gym"
+	PresetLabel string // "Hardstyle ⚡" (leer bei eigenen Situationen)
+	Name        string // vollständiger Playlist-Name
+	Recipe      catalog.Recipe
+	Mode        string
+	Count       int
+	User        string
+	Fingerprint string
+}
+
+// configSource liefert Rohwerte aus der Plugin-Konfiguration.
+// Navidrome speichert Strings unverändert, alle anderen Typen als JSON-Text.
+type configSource func(key string) (string, bool)
+
+func (c configSource) lookup(key string) (string, bool) {
+	v, ok := c(key)
+	return strings.TrimSpace(v), ok
+}
+
+func (c configSource) String(key, def string) string {
+	if v, ok := c.lookup(key); ok {
+		return v
+	}
+	return def
+}
+
+func (c configSource) Int(key string, def int) int {
+	v, ok := c.lookup(key)
+	if !ok || v == "" {
+		return def
+	}
+	if n, err := strconv.Atoi(v); err == nil {
+		return n
+	}
+	if f, err := strconv.ParseFloat(v, 64); err == nil {
+		return int(f)
+	}
+	logf(pdk.LogWarn, "Einstellung %q: %q ist keine Zahl – verwende %d", key, v, def)
+	return def
+}
+
+func (c configSource) Bool(key string, def bool) bool {
+	v, ok := c.lookup(key)
+	if !ok || v == "" {
+		return def
+	}
+	if b, err := strconv.ParseBool(v); err == nil {
+		return b
+	}
+	logf(pdk.LogWarn, "Einstellung %q: %q ist kein Wahrheitswert – verwende %v", key, v, def)
+	return def
+}
+
+// JSON parst einen JSON-Wert; liefert false, wenn er fehlt oder ungültig ist.
+func (c configSource) JSON(key string, target any) bool {
+	v, ok := c.lookup(key)
+	if !ok || v == "" {
+		return false
+	}
+	if err := json.Unmarshal([]byte(v), target); err != nil {
+		logf(pdk.LogError, "Einstellung %q ist ungültig (%v) – verwende Standardwerte", key, err)
+		return false
+	}
+	return true
+}
+
+// loadSettings liest und normalisiert die komplette Konfiguration.
+func loadSettings(src configSource, cat *catalog.Catalog) Settings {
+	s := Settings{
+		Prefix:           src.String(catalog.KeyPrefix, catalog.DefaultPrefix),
+		ShowPresetInName: src.Bool(catalog.KeyShowPresetInName, true),
+		DefaultUser:      src.String(catalog.KeyDefaultUser, ""),
+		TrackCount:       clamp(src.Int(catalog.KeyTrackCount, catalog.DefaultTrackCount), 1, maxTracksPerPlaylist),
+		PublicPlaylists:  src.Bool(catalog.KeyPublicPlaylists, true),
+		GenerationTime:   src.String(catalog.KeyGenerationTime, catalog.DefaultGenerationTime),
+		CronExpression:   src.String(catalog.KeyCronExpression, ""),
+		RunOnStartup:     src.Bool(catalog.KeyRunOnStartup, true),
+		MaxPerArtist:     clamp(src.Int(catalog.KeyMaxPerArtist, catalog.DefaultMaxPerArtist), 0, 100),
+		AvoidRecentDays:  clamp(src.Int(catalog.KeyAvoidRecentDays, catalog.DefaultAvoidRecentDays), 0, 90),
+		HistoryDays:      clamp(src.Int(catalog.KeyHistoryDays, catalog.DefaultHistoryDays), 0, 30),
+		SkipInterludes:   src.Bool(catalog.KeySkipInterludes, true),
+		RemoveAll:        src.Bool(catalog.KeyRemoveAll, false),
+		ExcludeGenres:    catalog.DefaultExcludeGenres,
+		Situations:       map[string]situationConfig{},
+	}
+	if s.Prefix == "" {
+		s.Prefix = catalog.DefaultPrefix
+	}
+	var excludes []string
+	if src.JSON(catalog.KeyExcludeGenres, &excludes) {
+		s.ExcludeGenres = excludes
+	}
+	for _, sit := range cat.Situations {
+		var sc situationConfig
+		src.JSON(sit.ID, &sc)
+		s.Situations[sit.ID] = sc
+	}
+	src.JSON(catalog.KeyCustomSituations, &s.Custom)
+	return s
+}
+
+// buildJobs erzeugt für jede aktivierte Situation genau einen Job.
+func buildJobs(cat *catalog.Catalog, s Settings) []Job {
+	var jobs []Job
+	for _, sit := range cat.Situations {
+		sc := s.Situations[sit.ID]
+		enabled := sit.Enabled
+		if sc.Enabled != nil {
+			enabled = *sc.Enabled
+		}
+		if !enabled {
+			continue
+		}
+		preset, ok := sit.FindPreset(sc.Preset)
+		if !ok && sc.Preset != "" {
+			logf(pdk.LogWarn, "%s: Preset %q existiert nicht mehr – verwende %q", sit.Name, sc.Preset, sit.PresetLabel(preset))
+		}
+		variant := ""
+		if s.ShowPresetInName && !preset.Mix {
+			variant = preset.Name
+		}
+		jobs = append(jobs, Job{
+			ID:          sit.ID,
+			Title:       sit.Name,
+			PresetLabel: sit.PresetLabel(preset),
+			Name:        buildPlaylistName(s.Prefix, sit.Name, variant, sit.PresetEmoji(preset)),
+			Recipe:      sit.Recipe(preset),
+			Mode:        normalizeMode(sc.Mode),
+			Count:       trackCount(sc.TrackCount, s.TrackCount),
+			User:        firstNonEmpty(sc.TargetUser, s.DefaultUser),
+		})
+	}
+
+	used := map[string]int{}
+	for _, c := range s.Custom {
+		name := strings.TrimSpace(c.Name)
+		if name == "" || (c.Enabled != nil && !*c.Enabled) {
+			continue
+		}
+		id := "custom-" + slug(name)
+		used[id]++
+		if used[id] > 1 {
+			id = fmt.Sprintf("%s-%d", id, used[id])
+		}
+		jobs = append(jobs, Job{
+			ID:    id,
+			Title: name,
+			Name:  buildPlaylistName(s.Prefix, name, "", c.Emoji),
+			Recipe: catalog.Recipe{
+				Genres:          catalog.UniqueFold(c.Genres),
+				ExcludeGenres:   catalog.UniqueFold(c.ExcludeGenres),
+				Moods:           catalog.UniqueFold(c.Moods),
+				MinBPM:          c.MinBPM,
+				MaxBPM:          c.MaxBPM,
+				FromYear:        c.FromYear,
+				ToYear:          c.ToYear,
+				Energy:          labelValue(catalog.EnergyLabels, c.Energy),
+				Flow:            labelValue(catalog.FlowLabels, c.Flow),
+				ExcludeExplicit: c.ExcludeExplicit,
+			},
+			Mode:  normalizeMode(c.Mode),
+			Count: trackCount(c.TrackCount, s.TrackCount),
+			User:  firstNonEmpty(c.TargetUser, s.DefaultUser),
+		})
+	}
+	return jobs
+}
+
+// buildPlaylistName erzeugt z. B. "🎧 Gym Hardstyle ⚡".
+func buildPlaylistName(prefix, situation, variant, emoji string) string {
+	parts := make([]string, 0, 4)
+	for _, p := range []string{prefix, situation, variant, emoji} {
+		if p = strings.TrimSpace(p); p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+// fingerprint erkennt, ob sich die Konfiguration einer Playlist geändert hat.
+func fingerprint(j Job, s Settings) string {
+	data, _ := json.Marshal(struct {
+		Name, Mode, User string
+		Count            int
+		Recipe           catalog.Recipe
+		MaxPerArtist     int
+		SkipInterludes   bool
+		ExcludeGenres    []string
+	}{j.Name, j.Mode, strings.ToLower(j.User), j.Count, j.Recipe, s.MaxPerArtist, s.SkipInterludes, s.ExcludeGenres})
+	h := fnv.New32a()
+	_, _ = h.Write(data)
+	return fmt.Sprintf("%08x", h.Sum32())
+}
+
+// cronExpression bestimmt den Cron-Ausdruck aus Cron-Feld oder Uhrzeit.
+func cronExpression(s Settings) (string, error) {
+	if s.CronExpression != "" {
+		fields := strings.Fields(s.CronExpression)
+		if len(fields) != 5 {
+			return "", fmt.Errorf("Cron-Ausdruck %q muss genau 5 Felder haben (Minute Stunde Tag Monat Wochentag)", s.CronExpression)
+		}
+		return strings.Join(fields, " "), nil
+	}
+	t, err := time.Parse("15:04", s.GenerationTime)
+	if err != nil {
+		return "", fmt.Errorf("Uhrzeit %q ist ungültig, erwartet HH:MM", s.GenerationTime)
+	}
+	return fmt.Sprintf("%d %d * * *", t.Minute(), t.Hour()), nil
+}
+
+func normalizeMode(m string) string {
+	for _, mode := range catalog.Modes {
+		if strings.EqualFold(strings.TrimSpace(m), mode) {
+			return mode
+		}
+	}
+	return catalog.ModeBalanced
+}
+
+// labelValue übersetzt eine Dropdown-Beschriftung ("energiegeladen") in den internen Wert ("high").
+func labelValue(labels map[string]string, v string) string {
+	v = strings.TrimSpace(v)
+	if internal, ok := labels[strings.ToLower(v)]; ok {
+		return internal
+	}
+	for _, internal := range labels {
+		if internal != "" && strings.EqualFold(internal, v) {
+			return internal
+		}
+	}
+	return ""
+}
+
+func trackCount(specific, def int) int {
+	if specific > 0 {
+		return clamp(specific, 1, maxTracksPerPlaylist)
+	}
+	return def
+}
+
+func slug(s string) string {
+	var b strings.Builder
+	dash := false
+	for _, r := range strings.ToLower(s) {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			b.WriteRune(r)
+			dash = false
+		} else if !dash && b.Len() > 0 {
+			b.WriteByte('-')
+			dash = true
+		}
+	}
+	return strings.TrimRight(b.String(), "-")
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v = strings.TrimSpace(v); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func clamp(v, lo, hi int) int {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
+}

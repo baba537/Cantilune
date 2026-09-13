@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Navidrome-Dokumentation
+    url: https://www.navidrome.org/docs/
+    about: Allgemeine Fragen zu Navidrome und zur Plugin-Konfiguration

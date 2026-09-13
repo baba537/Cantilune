@@ -1,0 +1,48 @@
+name: Fehler melden
+description: Ein Problem mit Cantilune melden
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschreibung
+      description: Was ist passiert, und was wurde stattdessen erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zur Reproduktion
+      placeholder: |
+        1. Situation „Gym“ mit Preset „Hardstyle“ aktivieren
+        2. Einstellungen speichern
+        3. …
+  - type: input
+    id: cantilune-version
+    attributes:
+      label: Cantilune-Version
+      placeholder: z. B. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: navidrome-version
+    attributes:
+      label: Navidrome-Version
+      placeholder: z. B. 0.64.0
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation
+      options:
+        - Docker
+        - Linux-Paket
+        - Binary
+        - Andere
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log-Ausgabe
+      description: Relevante Zeilen aus dem Navidrome-Log, idealerweise mit `Plugins.LogLevel = "debug"`.
+      render: text

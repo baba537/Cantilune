@@ -1,0 +1,2779 @@
+{
+  "name": "Cantilune",
+  "author": "baba537",
+  "version": "0.0.0-dev",
+  "description": "Erstellt täglich automatisch Playlists für 30 Alltagssituationen (Gym, Auto fahren, Kochen, Lernen, Schlafen …) – mit wählbaren Presets und einer Auswahl, die Genres, BPM, ReplayGain, Favoriten, Bewertungen und Hörverlauf berücksichtigt.",
+  "website": "https://github.com/baba537/Cantilune",
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "playlistPrefix": {
+          "type": "string",
+          "title": "Präfix",
+          "description": "Steht vor jedem Playlist-Namen, z. B. 🎧, 🌙 oder ✨.",
+          "minLength": 1,
+          "default": "🎧"
+        },
+        "showPresetInName": {
+          "type": "boolean",
+          "title": "Preset im Namen anzeigen (z. B. „Gym Hardstyle ⚡“)",
+          "default": true
+        },
+        "defaultUser": {
+          "type": "string",
+          "title": "Zielbenutzer",
+          "description": "Besitzer der Playlists. Leer = erster freigegebener Admin.",
+          "default": ""
+        },
+        "trackCount": {
+          "type": "integer",
+          "title": "Tracks pro Playlist",
+          "minimum": 1,
+          "maximum": 500,
+          "default": 50
+        },
+        "publicPlaylists": {
+          "type": "boolean",
+          "title": "Playlists öffentlich machen (für alle Benutzer sichtbar)",
+          "default": true
+        },
+        "generationTime": {
+          "type": "string",
+          "title": "Uhrzeit (HH:MM)",
+          "description": "Tägliche Neugenerierung (Serverzeit)",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+          "default": "04:00"
+        },
+        "cronExpression": {
+          "type": "string",
+          "title": "Cron (optional)",
+          "description": "Überschreibt die Uhrzeit, z. B. „0 */6 * * *“",
+          "default": ""
+        },
+        "runOnStartup": {
+          "type": "boolean",
+          "title": "Nach dem Speichern fehlende oder geänderte Playlists sofort erstellen",
+          "default": true
+        },
+        "maxPerArtist": {
+          "type": "integer",
+          "title": "Max. pro Künstler",
+          "description": "Songs je Künstler pro Playlist, 0 = unbegrenzt",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 3
+        },
+        "avoidRecentDays": {
+          "type": "integer",
+          "title": "Gehörtes meiden (Tage)",
+          "description": "Kürzlich gehörte Songs seltener wählen, 0 = aus",
+          "minimum": 0,
+          "maximum": 90,
+          "default": 3
+        },
+        "historyDays": {
+          "type": "integer",
+          "title": "Wiederholung meiden (Tage)",
+          "description": "Songs aus den Playlists der letzten Tage seltener wählen, 0 = nur Vortag",
+          "minimum": 0,
+          "maximum": 30,
+          "default": 7
+        },
+        "skipInterludes": {
+          "type": "boolean",
+          "title": "Kurze Intros, Skits und Interludes überspringen",
+          "default": true
+        },
+        "excludeGenres": {
+          "type": "array",
+          "title": "Genres nie verwenden",
+          "description": "Gilt für alle Playlists, außer ein Preset wählt das Genre ausdrücklich.",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "Audiobook",
+            "Hörbuch",
+            "Hörspiel",
+            "Podcast",
+            "Spoken Word",
+            "Comedy",
+            "Christmas",
+            "Weihnachten",
+            "Kinderlieder",
+            "Children's Music"
+          ]
+        },
+        "removeAllPlaylists": {
+          "type": "boolean",
+          "title": "Alle Cantilune-Playlists löschen und Plugin pausieren",
+          "description": "Vor dem Deinstallieren einschalten und speichern: Navidrome meldet Plugins das Entfernen nicht, danach kann Cantilune nicht mehr aufräumen.",
+          "default": false
+        },
+        "gym": {
+          "type": "object",
+          "title": "Gym 💪",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Gym 💪",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 💪",
+                "Hardstyle ⚡",
+                "HipHop 🎤",
+                "EDM 🔥",
+                "Rock & Metal 🤘",
+                "Pop 🎶"
+              ],
+              "default": "Mix 💪"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 💪",
+            "mode": "Ausgewogen"
+          }
+        },
+        "laufen": {
+          "type": "object",
+          "title": "Laufen 🏃",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Laufen 🏃",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🏃",
+                "Drum & Bass 🥁",
+                "Techno & House 🎛️",
+                "Pop 🎶",
+                "Rock 🎸"
+              ],
+              "default": "Mix 🏃"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🏃",
+            "mode": "Ausgewogen"
+          }
+        },
+        "radfahren": {
+          "type": "object",
+          "title": "Radfahren 🚴",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Radfahren 🚴",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🚴",
+                "Indie 🌿",
+                "Elektro 🎧",
+                "Rock 🎸"
+              ],
+              "default": "Mix 🚴"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🚴",
+            "mode": "Ausgewogen"
+          }
+        },
+        "yoga": {
+          "type": "object",
+          "title": "Yoga & Meditation 🧘",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Yoga & Meditation 🧘",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Ambient 🌌",
+                "Weltmusik 🌍",
+                "Downtempo 🌙",
+                "Klassik 🎻"
+              ],
+              "default": "Ambient 🌌"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Ambient 🌌",
+            "mode": "Ausgewogen"
+          }
+        },
+        "wandern": {
+          "type": "object",
+          "title": "Spazieren & Wandern 🥾",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Spazieren & Wandern 🥾",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🥾",
+                "Folk 🪕",
+                "Indie 🌿",
+                "Akustik 🎸"
+              ],
+              "default": "Mix 🥾"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🥾",
+            "mode": "Ausgewogen"
+          }
+        },
+        "autoFahren": {
+          "type": "object",
+          "title": "Auto fahren 🚗",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Auto fahren 🚗",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🚗",
+                "Rock 🎸",
+                "Pop 🎶",
+                "HipHop 🎤",
+                "Deutsch 🇩🇪",
+                "80er & 90er 📼"
+              ],
+              "default": "Mix 🚗"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🚗",
+            "mode": "Ausgewogen"
+          }
+        },
+        "roadtrip": {
+          "type": "object",
+          "title": "Roadtrip 🛣️",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Roadtrip 🛣️",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Klassiker 🎸",
+                "Mitsingen 🎤",
+                "Indie 🌿",
+                "Country 🤠"
+              ],
+              "default": "Klassiker 🎸"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Klassiker 🎸",
+            "mode": "Ausgewogen"
+          }
+        },
+        "pendeln": {
+          "type": "object",
+          "title": "Bus & Bahn 🚆",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Bus & Bahn 🚆",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🚆",
+                "Lo-Fi ☕",
+                "Indie 🌿",
+                "Elektro 🎧"
+              ],
+              "default": "Mix 🚆"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🚆",
+            "mode": "Ausgewogen"
+          }
+        },
+        "nachtfahrt": {
+          "type": "object",
+          "title": "Nachtfahrt 🌃",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Nachtfahrt 🌃",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Synthwave 🌆",
+                "Deep House 🌙",
+                "Trip-Hop 🎧"
+              ],
+              "default": "Synthwave 🌆"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Synthwave 🌆",
+            "mode": "Ausgewogen"
+          }
+        },
+        "kochen": {
+          "type": "object",
+          "title": "Kochen 🍳",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Kochen 🍳",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🍳",
+                "Jazz & Soul 🎷",
+                "Latin 💃",
+                "Funk & Disco 🕺",
+                "Pop 🎶"
+              ],
+              "default": "Mix 🍳"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🍳",
+            "mode": "Ausgewogen"
+          }
+        },
+        "essen": {
+          "type": "object",
+          "title": "Essen 🍽️",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Essen 🍽️",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Jazz 🎷",
+                "Bossa & Lounge 🍸",
+                "Klassik 🎻",
+                "Akustik 🪕"
+              ],
+              "default": "Jazz 🎷"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Jazz 🎷",
+            "mode": "Ausgewogen"
+          }
+        },
+        "fruehstueck": {
+          "type": "object",
+          "title": "Frühstück ☕",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Frühstück ☕",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Akustik 🪕",
+                "Soul ☀️",
+                "Indie Pop 🌿",
+                "Jazz 🎷"
+              ],
+              "default": "Akustik 🪕"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Akustik 🪕",
+            "mode": "Ausgewogen"
+          }
+        },
+        "aufwachen": {
+          "type": "object",
+          "title": "Aufwachen 🌅",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Aufwachen 🌅",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Gute Laune ☀️",
+                "Sanft 🌤️",
+                "Power ⚡"
+              ],
+              "default": "Gute Laune ☀️"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Gute Laune ☀️",
+            "mode": "Ausgewogen"
+          }
+        },
+        "putzen": {
+          "type": "object",
+          "title": "Putzen 🧹",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Putzen 🧹",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🧹",
+                "Pop-Hits 🎶",
+                "Disco & Funk 🕺",
+                "Rock 🎸",
+                "2000er 💿"
+              ],
+              "default": "Mix 🧹"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🧹",
+            "mode": "Ausgewogen"
+          }
+        },
+        "duschen": {
+          "type": "object",
+          "title": "Duschen 🚿",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Duschen 🚿",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mitsingen 🎤",
+                "Power-Balladen 🎸",
+                "Deutsch 🇩🇪"
+              ],
+              "default": "Mitsingen 🎤"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mitsingen 🎤",
+            "mode": "Ausgewogen"
+          }
+        },
+        "garten": {
+          "type": "object",
+          "title": "Garten & Heimwerken 🔨",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Garten & Heimwerken 🔨",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🔨",
+                "Rock 🎸",
+                "Country 🤠",
+                "Reggae 🌴"
+              ],
+              "default": "Mix 🔨"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🔨",
+            "mode": "Ausgewogen"
+          }
+        },
+        "gaming": {
+          "type": "object",
+          "title": "Gaming 🎮",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Gaming 🎮",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Soundtrack 🎬",
+                "Synthwave 🌆",
+                "Elektro 🎧",
+                "Metal 🤘"
+              ],
+              "default": "Soundtrack 🎬"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Soundtrack 🎬",
+            "mode": "Ausgewogen"
+          }
+        },
+        "lesen": {
+          "type": "object",
+          "title": "Lesen 📖",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Lesen 📖",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Klassik 🎻",
+                "Ambient 🌌",
+                "Jazz 🎷",
+                "Neoklassik 🎹"
+              ],
+              "default": "Klassik 🎻"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Klassik 🎻",
+            "mode": "Ausgewogen"
+          }
+        },
+        "lernen": {
+          "type": "object",
+          "title": "Lernen 📚",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Lernen 📚",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 📚",
+                "Lo-Fi ☕",
+                "Klassik 🎻",
+                "Ambient 🌌",
+                "Soundtrack 🎬"
+              ],
+              "default": "Mix 📚"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 📚",
+            "mode": "Ausgewogen"
+          }
+        },
+        "fokus": {
+          "type": "object",
+          "title": "Arbeiten & Fokus 🎯",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Arbeiten & Fokus 🎯",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🎯",
+                "Elektronisch 🎧",
+                "Post-Rock 🌊",
+                "Lo-Fi ☕",
+                "Klassik 🎻"
+              ],
+              "default": "Mix 🎯"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🎯",
+            "mode": "Ausgewogen"
+          }
+        },
+        "kreativ": {
+          "type": "object",
+          "title": "Kreativ 🎨",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Kreativ 🎨",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🎨",
+                "Indie 🌿",
+                "Trip-Hop 🌀",
+                "Jazz 🎷"
+              ],
+              "default": "Mix 🎨"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix 🎨",
+            "mode": "Ausgewogen"
+          }
+        },
+        "entspannen": {
+          "type": "object",
+          "title": "Entspannen 🛋️",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Entspannen 🛋️",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🛋️",
+                "Chillout 🌴",
+                "Akustik 🪕",
+                "Reggae 🌴",
+                "Soul 🎙️"
+              ],
+              "default": "Mix 🛋️"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🛋️",
+            "mode": "Ausgewogen"
+          }
+        },
+        "schlafen": {
+          "type": "object",
+          "title": "Schlafen 😴",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Schlafen 😴",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Ambient 🌌",
+                "Klavier 🎹",
+                "Klassik 🎻",
+                "Naturklänge 🌧️"
+              ],
+              "default": "Ambient 🌌"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Ambient 🌌",
+            "mode": "Ausgewogen"
+          }
+        },
+        "regentag": {
+          "type": "object",
+          "title": "Regentag 🌧️",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Regentag 🌧️",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Melancholie 🌧️",
+                "Jazz 🎷",
+                "Trip-Hop 🌀"
+              ],
+              "default": "Melancholie 🌧️"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Melancholie 🌧️",
+            "mode": "Ausgewogen"
+          }
+        },
+        "party": {
+          "type": "object",
+          "title": "Party 🎉",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Party 🎉",
+              "default": true
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix 🎉",
+                "Dance & EDM 🔥",
+                "HipHop & R&B 🎤",
+                "2000er 💿",
+                "90er 📼",
+                "Schlager & Partyhits 🍻"
+              ],
+              "default": "Mix 🎉"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": true,
+            "preset": "Mix 🎉",
+            "mode": "Ausgewogen"
+          }
+        },
+        "dinner": {
+          "type": "object",
+          "title": "Dinner mit Gästen 🥂",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Dinner mit Gästen 🥂",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Jazz 🎷",
+                "Soul & Funk 🕺",
+                "Lounge 🍸",
+                "Latin 💃"
+              ],
+              "default": "Jazz 🎷"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Jazz 🎷",
+            "mode": "Ausgewogen"
+          }
+        },
+        "grillen": {
+          "type": "object",
+          "title": "Grillen & Sommer ☀️",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Grillen & Sommer ☀️",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Mix ☀️",
+                "Reggae & Dancehall 🌴",
+                "Latin & Afro 💃",
+                "Rock 🎸",
+                "HipHop 🎤"
+              ],
+              "default": "Mix ☀️"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Mix ☀️",
+            "mode": "Ausgewogen"
+          }
+        },
+        "romantik": {
+          "type": "object",
+          "title": "Date & Romantik 🌹",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Date & Romantik 🌹",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Soul & R&B 🎙️",
+                "Jazz 🎷",
+                "Akustik 🪕",
+                "Balladen 💕"
+              ],
+              "default": "Soul & R&B 🎙️"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Soul & R&B 🎙️",
+            "mode": "Ausgewogen"
+          }
+        },
+        "kinder": {
+          "type": "object",
+          "title": "Mit Kindern 🧸",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Mit Kindern 🧸",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Kinderlieder 🧸",
+                "Film & Musical 🎬",
+                "Gute-Laune-Pop 🎶"
+              ],
+              "default": "Kinderlieder 🧸"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Kinderlieder 🧸",
+            "mode": "Ausgewogen"
+          }
+        },
+        "motivation": {
+          "type": "object",
+          "title": "Motivation 🚀",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "title": "Motivation 🚀",
+              "default": false
+            },
+            "preset": {
+              "type": "string",
+              "title": "Preset",
+              "enum": [
+                "Episch 🎬",
+                "Rock 🎸",
+                "HipHop 🎤",
+                "Pop 🎶"
+              ],
+              "default": "Episch 🎬"
+            },
+            "mode": {
+              "type": "string",
+              "title": "Auswahl",
+              "enum": [
+                "Ausgewogen",
+                "Lieblingssongs",
+                "Entdecken",
+                "Neu hinzugefügt"
+              ],
+              "default": "Ausgewogen"
+            },
+            "trackCount": {
+              "type": "integer",
+              "title": "Tracks",
+              "description": "leer = Standard",
+              "minimum": 0,
+              "maximum": 500
+            },
+            "targetUser": {
+              "type": "string",
+              "title": "Benutzer",
+              "description": "leer = Standard-Zielbenutzer"
+            }
+          },
+          "default": {
+            "enabled": false,
+            "preset": "Episch 🎬",
+            "mode": "Ausgewogen"
+          }
+        },
+        "customSituations": {
+          "type": "array",
+          "title": "Eigene Situationen",
+          "description": "Beliebig viele zusätzliche Situationen mit eigenen Filtern.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "Aktiviert",
+                "default": true
+              },
+              "name": {
+                "type": "string",
+                "title": "Name",
+                "minLength": 1
+              },
+              "emoji": {
+                "type": "string",
+                "title": "Emoji"
+              },
+              "genres": {
+                "type": "array",
+                "title": "Genres (leer = ganze Bibliothek)",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "excludeGenres": {
+                "type": "array",
+                "title": "Genres ausschließen",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "moods": {
+                "type": "array",
+                "title": "Stimmungen (Mood-Tags)",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "minBpm": {
+                "type": "integer",
+                "title": "BPM min",
+                "minimum": 0,
+                "maximum": 400
+              },
+              "maxBpm": {
+                "type": "integer",
+                "title": "BPM max",
+                "minimum": 0,
+                "maximum": 400
+              },
+              "fromYear": {
+                "type": "integer",
+                "title": "Jahr ab",
+                "minimum": 0,
+                "maximum": 2100
+              },
+              "toYear": {
+                "type": "integer",
+                "title": "Jahr bis",
+                "minimum": 0,
+                "maximum": 2100
+              },
+              "energy": {
+                "type": "string",
+                "title": "Energie",
+                "enum": [
+                  "egal",
+                  "ruhig",
+                  "mittel",
+                  "energiegeladen"
+                ],
+                "default": "egal"
+              },
+              "flow": {
+                "type": "string",
+                "title": "Verlauf",
+                "enum": [
+                  "zufällig",
+                  "ansteigend",
+                  "abklingend"
+                ],
+                "default": "zufällig"
+              },
+              "mode": {
+                "type": "string",
+                "title": "Auswahl",
+                "enum": [
+                  "Ausgewogen",
+                  "Lieblingssongs",
+                  "Entdecken",
+                  "Neu hinzugefügt"
+                ],
+                "default": "Ausgewogen"
+              },
+              "excludeExplicit": {
+                "type": "boolean",
+                "title": "Explizite Songs ausschließen"
+              },
+              "trackCount": {
+                "type": "integer",
+                "title": "Tracks",
+                "description": "leer = Standard",
+                "minimum": 0,
+                "maximum": 500
+              },
+              "targetUser": {
+                "type": "string",
+                "title": "Benutzer",
+                "description": "leer = Standard-Zielbenutzer"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "default": []
+        }
+      }
+    },
+    "uiSchema": {
+      "type": "VerticalLayout",
+      "elements": [
+        {
+          "type": "Group",
+          "label": "Allgemein",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/playlistPrefix"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/defaultUser"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/trackCount"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/publicPlaylists"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/showPresetInName"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Zeitplan",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/generationTime"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/cronExpression"
+                }
+              ]
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/runOnStartup"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Auswahl",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/maxPerArtist"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/avoidRecentDays"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/historyDays"
+                }
+              ]
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/skipInterludes"
+            },
+            {
+              "type": "Control",
+              "scope": "#/properties/excludeGenres"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🏋️ Sport & Bewegung",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gym/properties/enabled",
+                  "label": "Gym 💪"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gym/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gym/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gym/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gym/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/laufen/properties/enabled",
+                  "label": "Laufen 🏃"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/laufen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/laufen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/laufen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/laufen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/radfahren/properties/enabled",
+                  "label": "Radfahren 🚴"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/radfahren/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/radfahren/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/radfahren/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/radfahren/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/yoga/properties/enabled",
+                  "label": "Yoga & Meditation 🧘"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/yoga/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/yoga/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/yoga/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/yoga/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/wandern/properties/enabled",
+                  "label": "Spazieren & Wandern 🥾"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/wandern/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/wandern/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/wandern/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/wandern/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🚗 Unterwegs",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/autoFahren/properties/enabled",
+                  "label": "Auto fahren 🚗"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/autoFahren/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/autoFahren/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/autoFahren/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/autoFahren/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/roadtrip/properties/enabled",
+                  "label": "Roadtrip 🛣️"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/roadtrip/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/roadtrip/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/roadtrip/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/roadtrip/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/pendeln/properties/enabled",
+                  "label": "Bus & Bahn 🚆"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/pendeln/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/pendeln/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/pendeln/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/pendeln/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/nachtfahrt/properties/enabled",
+                  "label": "Nachtfahrt 🌃"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/nachtfahrt/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/nachtfahrt/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/nachtfahrt/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/nachtfahrt/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🏠 Zuhause",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kochen/properties/enabled",
+                  "label": "Kochen 🍳"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kochen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kochen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kochen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kochen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/essen/properties/enabled",
+                  "label": "Essen 🍽️"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/essen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/essen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/essen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/essen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fruehstueck/properties/enabled",
+                  "label": "Frühstück ☕"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fruehstueck/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fruehstueck/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fruehstueck/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fruehstueck/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/aufwachen/properties/enabled",
+                  "label": "Aufwachen 🌅"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/aufwachen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/aufwachen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/aufwachen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/aufwachen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/putzen/properties/enabled",
+                  "label": "Putzen 🧹"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/putzen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/putzen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/putzen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/putzen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/duschen/properties/enabled",
+                  "label": "Duschen 🚿"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/duschen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/duschen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/duschen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/duschen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/garten/properties/enabled",
+                  "label": "Garten & Heimwerken 🔨"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/garten/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/garten/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/garten/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/garten/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gaming/properties/enabled",
+                  "label": "Gaming 🎮"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gaming/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gaming/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gaming/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/gaming/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lesen/properties/enabled",
+                  "label": "Lesen 📖"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lesen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lesen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lesen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lesen/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🧠 Konzentration",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lernen/properties/enabled",
+                  "label": "Lernen 📚"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lernen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lernen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lernen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/lernen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fokus/properties/enabled",
+                  "label": "Arbeiten & Fokus 🎯"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fokus/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fokus/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fokus/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/fokus/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kreativ/properties/enabled",
+                  "label": "Kreativ 🎨"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kreativ/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kreativ/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kreativ/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kreativ/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🌙 Entspannung & Schlaf",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/entspannen/properties/enabled",
+                  "label": "Entspannen 🛋️"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/entspannen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/entspannen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/entspannen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/entspannen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/schlafen/properties/enabled",
+                  "label": "Schlafen 😴"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/schlafen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/schlafen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/schlafen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/schlafen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/regentag/properties/enabled",
+                  "label": "Regentag 🌧️"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/regentag/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/regentag/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/regentag/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/regentag/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🎉 Gesellschaft & Stimmung",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/party/properties/enabled",
+                  "label": "Party 🎉"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/party/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/party/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/party/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/party/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dinner/properties/enabled",
+                  "label": "Dinner mit Gästen 🥂"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dinner/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dinner/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dinner/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dinner/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/grillen/properties/enabled",
+                  "label": "Grillen & Sommer ☀️"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/grillen/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/grillen/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/grillen/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/grillen/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/romantik/properties/enabled",
+                  "label": "Date & Romantik 🌹"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/romantik/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/romantik/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/romantik/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/romantik/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kinder/properties/enabled",
+                  "label": "Mit Kindern 🧸"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kinder/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kinder/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kinder/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/kinder/properties/targetUser"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/motivation/properties/enabled",
+                  "label": "Motivation 🚀"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/motivation/properties/preset"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/motivation/properties/mode"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/motivation/properties/trackCount"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/motivation/properties/targetUser"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "✏️ Eigene Situationen",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/customSituations",
+              "options": {
+                "elementLabelProp": "name",
+                "detail": {
+                  "type": "VerticalLayout",
+                  "elements": [
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/enabled"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/name"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/emoji"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/mode"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/energy"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/flow"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/trackCount"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/targetUser"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "HorizontalLayout",
+                      "elements": [
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/minBpm"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/maxBpm"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/fromYear"
+                        },
+                        {
+                          "type": "Control",
+                          "scope": "#/properties/toYear"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/genres"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/excludeGenres"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/moods"
+                    },
+                    {
+                      "type": "Control",
+                      "scope": "#/properties/excludeExplicit"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "🧹 Aufräumen",
+          "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/removeAllPlaylists"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "permissions": {
+    "subsonicapi": {
+      "reason": "Songs samt Metadaten abrufen (getRandomSongs, getGenres, getPlaylist) sowie Cantilune-Playlists anlegen, veröffentlichen und ersetzen"
+    },
+    "users": {
+      "reason": "Die Subsonic-API-Aufrufe im Namen der konfigurierten Zielbenutzer ausführen"
+    },
+    "scheduler": {
+      "reason": "Playlists täglich zur konfigurierten Uhrzeit neu generieren"
+    },
+    "kvstore": {
+      "reason": "Songs der letzten Tage merken, damit sich Playlists nicht wiederholen",
+      "maxSize": "10MB"
+    }
+  }
+}

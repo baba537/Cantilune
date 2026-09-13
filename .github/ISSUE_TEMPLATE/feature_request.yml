@@ -1,0 +1,29 @@
+name: Vorschlag
+description: Neue Situation, neues Preset oder eine andere Verbesserung vorschlagen
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Art des Vorschlags
+      options:
+        - Neue Situation
+        - Neues Preset
+        - Verbesserung der Auswahl
+        - Sonstiges
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Beschreibung
+      description: Was soll ergänzt oder geändert werden?
+    validations:
+      required: true
+  - type: textarea
+    id: preset
+    attributes:
+      label: Genres und Filter
+      description: Bei Situationen und Presets optional passende Genres, BPM-Bereich oder Jahre angeben.
+      placeholder: 'z. B. { "name": "Phonk", "genres": ["Phonk", "Drift Phonk"], "minBpm": 120, "maxBpm": 160 }'
+      render: json
