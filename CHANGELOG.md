@@ -2,6 +2,17 @@
 
 All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] – 2026-09-14
+
+### Fixed
+- Genre matching compared parts of words, so presets picked up unrelated genres: `Dance` matched `Dancehall`, `Reggae` matched `Reggaeton`, `Hardcore` matched `Hardcore Punk`, `Classical` matched `Neoclassical Metal`, `Folk` and `Drone` matched their metal variants. Genres are now compared as whole words; only real sub-genres such as `Deep House` or `Euphoric Hardstyle` count.
+- A genre with many sub-genres in the library (e.g. House) could dominate a preset. Every genre of a preset now gets an equal share of the candidates and of the final playlist.
+- Excluded genres are also matched as whole words (`Christmas` excludes `Christmas Pop`).
+
+### Changed
+- Genre fit is part of the song weight: songs tagged exactly with a wanted genre, and songs without many unrelated genre tags, are preferred.
+- BPM and energy estimates have less influence, so missing or inaccurate tags no longer push songs out of a playlist.
+
 ## [1.1.0] – 2026-09-14
 
 ### Changed
@@ -29,5 +40,6 @@ First public release.
 - Schedule by time of day or cron expression, with immediate update after saving
 - Option to delete all generated playlists before uninstalling
 
+[1.2.0]: https://github.com/baba537/Cantilune/releases/tag/v1.2.0
 [1.1.0]: https://github.com/baba537/Cantilune/releases/tag/v1.1.0
 [1.0.0]: https://github.com/baba537/Cantilune/releases/tag/v1.0.0

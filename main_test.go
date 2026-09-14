@@ -87,24 +87,106 @@ func TestResolveGenresIsTolerant(t *testing.T) {
 		{"Hardstyle", 3}, {"Euphoric Hardstyle", 200}, {"Hip Hop", 50}, {"Drum'n'Bass", 20},
 		{"Rock", 100}, {"Pop", 10}, {"K-Pop", 3}, {"R&B", 7},
 	}
-	matched, missing := resolveGenres(library, []string{"hardstyle", "Hip-Hop", "Drum and Bass", "Rawstyle", "Pop", "RnB"})
+	groups, missing := resolveGenres(library, []string{"hardstyle", "Hip-Hop", "Drum and Bass", "Rawstyle", "Pop", "RnB"})
 	names := map[string]bool{}
-	for _, m := range matched {
-		names[m.Name] = true
+	for _, group := range groups {
+		for _, m := range group {
+			names[m.Name] = true
+		}
 	}
 	for _, want := range []string{"Hardstyle", "Euphoric Hardstyle", "Hip Hop", "Drum'n'Bass", "Pop", "R&B"} {
 		if !names[want] {
-			t.Errorf("%q was not matched: %v", want, matched)
+			t.Errorf("%q was not matched: %v", want, groups)
 		}
 	}
 	if names["K-Pop"] || names["Rock"] {
-		t.Errorf("wrong match: %v", matched)
+		t.Errorf("wrong match: %v", groups)
 	}
 	if len(missing) != 1 || missing[0] != "Rawstyle" {
 		t.Errorf("missing = %v", missing)
 	}
-	if matched[0].Name != "Hardstyle" && matched[0].Name != "Hip Hop" && matched[0].Name != "Pop" {
-		t.Errorf("exact matches should come first: %v", matched)
+	if len(groups[0]) != 2 || groups[0][0].Name != "Hardstyle" || groups[0][0].Quality != exactGenre {
+		t.Errorf("exact matches should come first: %v", groups[0])
+	}
+}
+
+func TestMatchGenreUsesWholeWords(t *testing.T) {
+	cases := []struct {
+		name, wanted string
+		want         genreQuality
+	}{
+		{"Hip Hop", "Hip-Hop", exactGenre},
+		{"Drum & Bass", "Drum and Bass", exactGenre},
+		{"Liquid Drum'n'Bass", "Drum and Bass", subGenre},
+		{"Euphoric Hardstyle", "Hardstyle", subGenre},
+		{"Deep House", "House", subGenre},
+		{"Nu Metal", "Metal", subGenre},
+		{"Dancehall", "Dance", noMatch},
+		{"Reggaeton", "Reggae", noMatch},
+		{"Hardcore Punk", "Hardcore", noMatch},
+		{"Neoclassical Metal", "Classical", noMatch},
+		{"Neoclassical", "Classical", noMatch},
+		{"Folk Metal", "Folk", noMatch},
+		{"Drone Metal", "Drone", noMatch},
+		{"K-Pop", "Pop", noMatch},
+		{"Gamelan", "Game", noMatch},
+	}
+	for _, c := range cases {
+		if got := matchGenre(c.name, c.wanted); got != c.want {
+			t.Errorf("matchGenre(%q, %q) = %d, want %d", c.name, c.wanted, got, c.want)
+		}
+	}
+	if !containsGenre("Christmas Pop", "Christmas") || containsGenre("Christmastime", "Christmas") || !containsGenre("Spoken Word Poetry", "Spoken Word") {
+		t.Error("containsGenre should match whole words anywhere")
+	}
+}
+
+func TestGenreFactorPrefersPureMatches(t *testing.T) {
+	wanted := []string{"Hardstyle"}
+	pure := genreFactor([]string{"Hardstyle"}, wanted)
+	mixed := genreFactor([]string{"Hardstyle", "Pop", "Schlager"}, wanted)
+	sub := genreFactor([]string{"Euphoric Hardstyle"}, wanted)
+	none := genreFactor([]string{"Pop"}, wanted)
+	if !(pure > sub && sub > mixed && mixed > none) {
+		t.Errorf("unexpected order: pure=%v sub=%v mixed=%v none=%v", pure, sub, mixed, none)
+	}
+}
+
+// Wrong genres that only share a word stem must not end up in the playlist,
+// and every wanted genre gets a fair share of the candidates.
+func TestSelectionIgnoresSimilarlyNamedGenres(t *testing.T) {
+	cat := mustCatalog(t)
+	f := newFakeServer()
+	f.addSongs("Dance", 40, nil)
+	f.addSongs("Dancehall", 200, nil)
+	f.addSongs("Reggaeton", 200, nil)
+	f.addSongs("Deep House", 30, nil)
+	f.addSongs("Tech House", 30, nil)
+	f.addSongs("Progressive House", 30, nil)
+	f.addSongs("Afro House", 30, nil)
+	f.addSongs("EDM", 40, nil)
+	useFake(t, f)
+
+	g := newGenerator(cat, Settings{MaxPerArtist: 0}, false)
+	job := Job{Name: "t", User: "admin", Count: 60, Recipe: catalog.Recipe{Genres: []string{"Dance", "House", "EDM"}}}
+	ids, st, err := g.selectSongs(job, nil)
+	if err != nil || len(ids) != 60 {
+		t.Fatalf("%d songs, %v", len(ids), err)
+	}
+	perGenre := map[string]int{}
+	for _, id := range ids {
+		prefix := id[:strings.LastIndex(id, "-")]
+		perGenre[prefix]++
+	}
+	if perGenre["dancehall"] > 0 || perGenre["reggaeton"] > 0 {
+		t.Errorf("similarly named genres were selected: %v", perGenre)
+	}
+	house := perGenre["deephouse"] + perGenre["techhouse"] + perGenre["progressivehouse"] + perGenre["afrohouse"]
+	if perGenre["dance"] < 10 || perGenre["edm"] < 10 || house > 35 {
+		t.Errorf("genres not balanced: %v (house total %d)", perGenre, house)
+	}
+	if len(st.Missing) != 0 {
+		t.Errorf("unexpected missing genres: %v", st.Missing)
 	}
 }
 
@@ -113,10 +195,12 @@ func TestBPMFactorHalfAndDoubleTime(t *testing.T) {
 		bpm, min, max int
 		want          float64
 	}{
-		{150, 140, 180, 1.6},
-		{75, 140, 180, 1.6}, // half-time tag
-		{170, 85, 100, 1.6}, // double-time tag
-		{100, 140, 180, 0.3},
+		{150, 140, 180, 1.5},
+		{75, 140, 180, 1.5},  // half-time tag
+		{170, 85, 100, 1.5},  // double-time tag
+		{130, 140, 180, 1},   // slightly below
+		{112, 140, 180, 0.6}, // clearly below
+		{40, 140, 180, 0.35}, // far away, even doubled
 		{0, 140, 180, 1},
 		{120, 0, 0, 1},
 	}

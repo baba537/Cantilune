@@ -16,7 +16,8 @@ import (
 const (
 	maxRandomSongsPerCall = 500 // limit of getRandomSongs
 	maxTracksPerPlaylist  = 500
-	maxGenresPerPlaylist  = 40
+	maxGenresPerWanted    = 12 // library genres queried per wanted genre
+	minSongsPerGenre      = 10
 	maxPoolSize           = 1500
 	poolFactor            = 6   // candidates per requested track
 	interludeMaxSeconds   = 150 // only short "intro"/"skit" tracks count as interludes
@@ -38,10 +39,11 @@ type candidate struct {
 	weight float64
 	energy float64 // 0 (calm) … 1 (energetic), -1 = unknown
 	key    float64
+	group  int // index of the wanted genre the song was loaded for, -1 = none
 }
 
 type selectionStats struct {
-	Genres     []libraryGenre
+	Genres     []genreMatch
 	Missing    []string
 	Similar    []string
 	Candidates int
@@ -55,13 +57,13 @@ type selectionStats struct {
 // selectSongs picks the songs of a playlist:
 //  1. load candidates with getRandomSongs (per matching library genre)
 //  2. hard filters (excluded genres, 1 star, explicit, duration, intros)
-//  3. weighting by BPM, energy (BPM + ReplayGain), mood, favorites, rating,
-//     play count, last played and recent playlists
-//  4. weighted random selection with a per-artist limit
+//  3. weighting by genre fit, BPM, energy (BPM + ReplayGain), mood, favorites,
+//     rating, play count, last played and recent playlists
+//  4. weighted random selection with a limit per artist and per wanted genre
 //  5. ordering by flow (random, rising, falling)
 func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selectionStats, error) {
 	st := selectionStats{Rejected: map[string]int{}}
-	pool, err := g.gatherCandidates(job, &st)
+	pool, groupOf, err := g.gatherCandidates(job, &st)
 	if err != nil {
 		return nil, st, err
 	}
@@ -80,7 +82,11 @@ func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selec
 	now := nowFn()
 	cands := make([]candidate, len(kept))
 	for i, s := range kept {
-		cands[i] = candidate{s: s, energy: songEnergy(s), weight: g.score(s, job, recent, now)}
+		group, ok := groupOf[s.ID]
+		if !ok {
+			group = -1
+		}
+		cands[i] = candidate{s: s, energy: songEnergy(s), weight: g.score(s, job, recent, now), group: group}
 	}
 	chosen := g.pick(cands, job.Count)
 	for _, c := range chosen {
@@ -103,16 +109,17 @@ func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selec
 	return ids, st, nil
 }
 
-func (g *generator) gatherCandidates(job Job, st *selectionStats) ([]song, error) {
+// gatherCandidates loads the candidate pool. groupOf maps each song ID to the
+// index of the wanted genre it was loaded for (empty without genres).
+func (g *generator) gatherCandidates(job Job, st *selectionStats) (pool []song, groupOf map[string]int, err error) {
 	r := job.Recipe
 	target := clamp(job.Count*poolFactor, 150, maxPoolSize)
-	seen := map[string]bool{}
-	var pool []song
-	add := func(songs []song) int {
+	groupOf = map[string]int{}
+	add := func(songs []song, group int) int {
 		n := 0
 		for _, s := range songs {
-			if s.ID != "" && !seen[s.ID] {
-				seen[s.ID] = true
+			if _, dup := groupOf[s.ID]; s.ID != "" && !dup {
+				groupOf[s.ID] = group
 				pool = append(pool, s)
 				n++
 			}
@@ -127,58 +134,78 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) ([]song, error
 			songs, err := fetchRandomSongs(job.User, "", size, r.FromYear, r.ToYear)
 			if err != nil {
 				if round == 0 {
-					return nil, err
+					return nil, nil, err
 				}
 				break
 			}
-			if add(songs) == 0 || len(songs) < size {
+			if add(songs, -1) == 0 || len(songs) < size {
 				break
 			}
 		}
-		return pool, nil
+		return pool, groupOf, nil
 	}
 
 	library := g.libraryGenres(job.User)
-	var matched []libraryGenre
+	var groups [][]genreMatch
 	if library == nil {
 		for _, w := range r.Genres {
-			matched = append(matched, libraryGenre{Name: w})
+			groups = append(groups, []genreMatch{{libraryGenre: libraryGenre{Name: w}, Wanted: w, Quality: exactGenre}})
 		}
 	} else {
-		matched, st.Missing = resolveGenres(library, r.Genres)
-		if len(matched) == 0 {
+		groups, st.Missing = resolveGenres(library, r.Genres)
+		if len(groups) == 0 {
 			for _, m := range st.Missing {
 				st.Similar = append(st.Similar, similarGenres(library, m, 3)...)
 			}
 			st.Similar = catalog.UniqueFold(st.Similar)
 		}
 	}
-	st.Genres = matched
-	if len(matched) == 0 {
-		return nil, nil
+	if len(groups) == 0 {
+		return nil, groupOf, nil
 	}
 
-	per := max((target+len(matched)-1)/len(matched), 20)
+	// Every wanted genre gets the same share of the pool, so a genre with many
+	// sub-genres in the library (e.g. House) does not crowd out the others.
+	// Within a wanted genre, the share is split by the size of each library genre.
+	sizes := map[string]int{}
+	groupOfGenre := map[string]int{}
+	var order []genreMatch
+	perWanted := max((target+len(groups)-1)/len(groups), minSongsPerGenre)
+	for gi, group := range groups {
+		total := 0
+		for _, m := range group {
+			total += max(m.SongCount, 1)
+		}
+		for _, m := range group {
+			size := max(perWanted*max(m.SongCount, 1)/total, minSongsPerGenre)
+			if m.SongCount > 0 {
+				size = min(size, m.SongCount)
+			}
+			if _, ok := sizes[m.Name]; !ok {
+				order = append(order, m)
+				groupOfGenre[m.Name] = gi
+			}
+			sizes[m.Name] += size
+		}
+	}
+	st.Genres = order
+
 	var lastErr error
 	succeeded := 0
-	for _, gen := range matched {
-		size := per
-		if gen.SongCount > 0 && gen.SongCount < size {
-			size = gen.SongCount
-		}
-		songs, err := fetchRandomSongs(job.User, gen.Name, size, r.FromYear, r.ToYear)
+	for _, gen := range order {
+		songs, err := fetchRandomSongs(job.User, gen.Name, sizes[gen.Name], r.FromYear, r.ToYear)
 		if err != nil {
 			logf(pdk.LogWarn, "%s: could not load songs for genre %q: %v", job.Name, gen.Name, err)
 			lastErr = err
 			continue
 		}
 		succeeded++
-		add(songs)
+		add(songs, groupOfGenre[gen.Name])
 	}
 	if succeeded == 0 && lastErr != nil {
-		return nil, lastErr
+		return nil, nil, lastErr
 	}
-	return pool, nil
+	return pool, groupOf, nil
 }
 
 // libraryGenres loads the genre list once per user; nil = unavailable.
@@ -200,7 +227,7 @@ func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rej
 	// Global exclusions do not apply if the recipe explicitly asks for the genre.
 	var excludes []string
 	for _, e := range g.cfg.ExcludeGenres {
-		if !matchesAnyGenre([]string{e}, r.Genres) && !matchesAnyGenre(r.Genres, []string{e}) {
+		if !containsAnyGenre(r.Genres, []string{e}) && bestGenreMatch([]string{e}, r.Genres) == noMatch {
 			excludes = append(excludes, e)
 		}
 	}
@@ -219,7 +246,7 @@ func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rej
 	for _, s := range pool {
 		reason := ""
 		switch {
-		case len(excludes) > 0 && matchesAnyGenre(songGenres(s), excludes):
+		case len(excludes) > 0 && containsAnyGenre(songGenres(s), excludes):
 			reason = reasonExcludedGenre
 		case s.UserRating == 1:
 			reason = reasonDisliked
@@ -299,6 +326,7 @@ func (g *generator) score(s song, job Job, recent map[string]int, now time.Time)
 	if age, ok := recent[s.ID]; ok {
 		w *= repeatFactor(age) // variety compared to recent playlists
 	}
+	w *= genreFactor(songGenres(s), r.Genres)
 	w *= bpmFactor(s.BPM, r.MinBPM, r.MaxBPM)
 	w *= moodFactor(s.Moods, r.Moods)
 	if r.Energy != "" {
@@ -320,6 +348,23 @@ func ratingFactor(rating int, five, four, two float64) float64 {
 		return two
 	}
 	return 1
+}
+
+// genreFactor prefers songs whose genre tags fit the recipe well: an exact
+// genre beats a sub-genre, and a song tagged only with wanted genres beats one
+// where the wanted genre is just one of many tags.
+func genreFactor(names, wanted []string) float64 {
+	if len(wanted) == 0 || len(names) == 0 {
+		return 1
+	}
+	f := 0.6 + 0.4*genreShare(names, wanted)
+	switch bestGenreMatch(names, wanted) {
+	case exactGenre:
+		return f
+	case subGenre:
+		return 0.8 * f
+	}
+	return 0.3
 }
 
 // bpmFactor prefers songs within the BPM range. Half and double BPM count as
@@ -344,11 +389,13 @@ func bpmFactor(bpm, minBPM, maxBPM int) float64 {
 	}
 	switch {
 	case best == 0:
-		return 1.6
-	case best <= 0.08:
+		return 1.5
+	case best <= 0.1:
 		return 1
+	case best <= 0.25:
+		return 0.6
 	default:
-		return 0.3
+		return 0.35
 	}
 }
 
@@ -398,20 +445,24 @@ func replayGain(s song) *float64 {
 	return s.ReplayGain.AlbumGain
 }
 
+// energyFactor is deliberately moderate: the energy estimate is only a hint,
+// so it must not outweigh the genre.
 func energyFactor(target string, e float64) float64 {
 	switch target {
 	case catalog.EnergyHigh:
-		return 0.4 + 1.4*e
+		return 0.6 + 0.8*e
 	case catalog.EnergyLow:
-		return 0.4 + 1.4*(1-e)
+		return 0.6 + 0.8*(1-e)
 	case catalog.EnergyMedium:
-		return 1.4 - 1.6*math.Abs(e-0.5)
+		return 1.2 - 0.8*math.Abs(e-0.5)
 	}
 	return 1
 }
 
-// pick draws weighted samples without replacement (Efraimidis-Spirakis) and
-// limits songs per artist; if that is not enough, it fills up without the limit.
+// pick draws weighted samples without replacement (Efraimidis-Spirakis).
+// The first pass limits songs per artist and gives every wanted genre an equal
+// share; later passes drop the genre share and then the artist limit if there
+// are not enough songs.
 func (g *generator) pick(cands []candidate, count int) []candidate {
 	for i := range cands {
 		u := g.rng.Float64()
@@ -422,31 +473,45 @@ func (g *generator) pick(cands []candidate, count int) []candidate {
 	}
 	sort.Slice(cands, func(i, j int) bool { return cands[i].key < cands[j].key })
 
+	groups := map[int]bool{}
+	for _, c := range cands {
+		if c.group >= 0 {
+			groups[c.group] = true
+		}
+	}
+	groupLimit := 0
+	if len(groups) > 1 {
+		groupLimit = (count + len(groups) - 1) / len(groups)
+	}
+
 	chosen := make([]candidate, 0, count)
 	used := make([]bool, len(cands))
-	if limit := g.cfg.MaxPerArtist; limit > 0 {
-		perArtist := map[string]int{}
+	perArtist := map[string]int{}
+	perGroup := map[int]int{}
+	fill := func(artistLimit, groupLimit int) {
 		for i, c := range cands {
 			if len(chosen) >= count {
-				break
+				return
 			}
-			a := artistKey(c.s)
-			if perArtist[a] >= limit {
+			if used[i] {
 				continue
 			}
-			perArtist[a]++
+			a := artistKey(c.s)
+			if artistLimit > 0 && perArtist[a] >= artistLimit {
+				continue
+			}
+			if groupLimit > 0 && c.group >= 0 && perGroup[c.group] >= groupLimit {
+				continue
+			}
 			used[i] = true
+			perArtist[a]++
+			perGroup[c.group]++
 			chosen = append(chosen, c)
 		}
 	}
-	for i, c := range cands {
-		if len(chosen) >= count {
-			break
-		}
-		if !used[i] {
-			chosen = append(chosen, c)
-		}
-	}
+	fill(g.cfg.MaxPerArtist, groupLimit)
+	fill(g.cfg.MaxPerArtist, 0)
+	fill(0, 0)
 	return chosen
 }
 

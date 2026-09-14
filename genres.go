@@ -6,55 +6,121 @@ import (
 	"unicode"
 )
 
-// genreAliases unifies common spellings (after normalizeGenre).
+// genreAliases unifies common spellings (applied to the normalized form).
 var genreAliases = map[string]string{
 	"dnb":         "drumandbass",
-	"drumnbass":   "drumandbass",
 	"rnb":         "randb",
 	"hiphoprap":   "hiphop",
+	"raphiphop":   "hiphop",
 	"electronica": "electronic",
 	"lofihiphop":  "lofi",
 	"soundtracks": "soundtrack",
 	"filmmusik":   "soundtrack",
 	"klassik":     "classical",
+	"worldmusic":  "world",
 }
 
-// normalizeGenre makes genre names comparable: "Hip-Hop", "hip hop" and
-// "HipHop" become "hiphop", "Drum & Bass" and "Drum'n'Bass" become "drumandbass".
-func normalizeGenre(s string) string {
-	s = strings.ToLower(s)
-	s = strings.NewReplacer("&", " and ", "'n'", " and ", " n ", " and ", "+", " and ").Replace(s)
-	var b strings.Builder
-	for _, r := range s {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			b.WriteRune(r)
+// genreQuality describes how well a genre name fits a wanted genre.
+type genreQuality int
+
+const (
+	noMatch    genreQuality = iota
+	subGenre                // more specific form, e.g. "Deep House" for "House"
+	exactGenre              // same genre, spelling differences ignored
+)
+
+// genreWords splits a genre name into lowercase words. "&", "'n'" and a
+// single "n" become "and", so "Drum & Bass", "Drum'n'Bass" and "Drum n Bass"
+// are equal.
+func genreWords(s string) []string {
+	s = strings.NewReplacer("&", " and ", "'n'", " and ", "’n’", " and ", "+", " and ").Replace(strings.ToLower(s))
+	words := strings.FieldsFunc(s, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
+	for i, w := range words {
+		if w == "n" {
+			words[i] = "and"
 		}
 	}
-	n := b.String()
+	return words
+}
+
+func joinGenreWords(words []string) string {
+	n := strings.Join(words, "")
 	if a, ok := genreAliases[n]; ok {
 		return a
 	}
 	return n
 }
 
-// genreMatches reports whether a library genre fits a wanted genre (both
-// normalized). From 4 characters on, a partial match is enough, so "Hardstyle"
-// also finds "Euphoric Hardstyle" and "House" finds "Deep House".
-func genreMatches(library, wanted string) bool {
-	if library == "" || wanted == "" {
-		return false
-	}
-	if library == wanted {
-		return true
-	}
-	return len(wanted) >= 4 && strings.Contains(library, wanted)
+// normalizeGenre makes genre names comparable: "Hip-Hop", "hip hop" and
+// "HipHop" become "hiphop".
+func normalizeGenre(s string) string {
+	return joinGenreWords(genreWords(s))
 }
 
-func matchesAnyGenre(names []string, wanted []string) bool {
+// matchGenre compares a genre name with a wanted genre. A sub-genre must end
+// with the wanted genre as whole words, preceded by a qualifier of at least
+// two characters: "Euphoric Hardstyle" fits "Hardstyle" and "Deep House" fits
+// "House", while "Hardcore Punk" does not fit "Hardcore", "Dancehall" does not
+// fit "Dance", "Neoclassical Metal" does not fit "Classical" and "K-Pop" does
+// not fit "Pop".
+func matchGenre(name, wanted string) genreQuality {
+	nw := normalizeGenre(wanted)
+	words := genreWords(name)
+	if nw == "" || len(words) == 0 {
+		return noMatch
+	}
+	if joinGenreWords(words) == nw {
+		return exactGenre
+	}
+	for k := 1; k < len(words); k++ {
+		if len(strings.Join(words[:k], "")) >= 2 && joinGenreWords(words[k:]) == nw {
+			return subGenre
+		}
+	}
+	return noMatch
+}
+
+// bestGenreMatch returns the best match of any name against any wanted genre.
+func bestGenreMatch(names, wanted []string) genreQuality {
+	best := noMatch
 	for _, n := range names {
-		nn := normalizeGenre(n)
 		for _, w := range wanted {
-			if genreMatches(nn, normalizeGenre(w)) {
+			if q := matchGenre(n, w); q > best {
+				best = q
+				if best == exactGenre {
+					return best
+				}
+			}
+		}
+	}
+	return best
+}
+
+// genreShare returns the fraction of names that match any wanted genre.
+func genreShare(names, wanted []string) float64 {
+	if len(names) == 0 {
+		return 0
+	}
+	n := 0
+	for _, name := range names {
+		if bestGenreMatch([]string{name}, wanted) != noMatch {
+			n++
+		}
+	}
+	return float64(n) / float64(len(names))
+}
+
+// containsGenre reports whether name contains the excluded genre as whole
+// words, so "Christmas" also excludes "Christmas Pop" but not "Christmastime".
+func containsGenre(name, excluded string) bool {
+	nx := normalizeGenre(excluded)
+	words := genreWords(name)
+	if nx == "" {
+		return false
+	}
+	for i := 0; i < len(words); i++ {
+		for j := i + 1; j <= len(words); j++ {
+			if joinGenreWords(words[i:j]) == nx {
 				return true
 			}
 		}
@@ -62,49 +128,54 @@ func matchesAnyGenre(names []string, wanted []string) bool {
 	return false
 }
 
-// resolveGenres maps the wanted genres to the actual genre names in the
-// library, because getRandomSongs expects exact names.
-func resolveGenres(library []libraryGenre, wanted []string) (matched []libraryGenre, missing []string) {
-	type hit struct {
-		g     libraryGenre
-		exact bool
-	}
-	hits := map[string]hit{}
-	for _, w := range wanted {
-		nw := normalizeGenre(w)
-		found := false
-		for _, g := range library {
-			ng := normalizeGenre(g.Name)
-			if !genreMatches(ng, nw) {
-				continue
+func containsAnyGenre(names, excluded []string) bool {
+	for _, n := range names {
+		for _, e := range excluded {
+			if containsGenre(n, e) {
+				return true
 			}
-			found = true
-			h := hits[g.Name]
-			h.g = g
-			h.exact = h.exact || ng == nw
-			hits[g.Name] = h
 		}
-		if !found {
+	}
+	return false
+}
+
+// genreMatch is a library genre matched to one wanted genre.
+type genreMatch struct {
+	libraryGenre
+	Wanted  string
+	Quality genreQuality
+}
+
+// resolveGenres maps each wanted genre to the genre names that exist in the
+// library, because getRandomSongs only filters by existing names. The result
+// is grouped by wanted genre; exact matches and larger genres come first.
+func resolveGenres(library []libraryGenre, wanted []string) (groups [][]genreMatch, missing []string) {
+	for _, w := range wanted {
+		var group []genreMatch
+		for _, g := range library {
+			if q := matchGenre(g.Name, w); q != noMatch {
+				group = append(group, genreMatch{libraryGenre: g, Wanted: w, Quality: q})
+			}
+		}
+		if len(group) == 0 {
 			missing = append(missing, w)
+			continue
 		}
-	}
-	for _, h := range hits {
-		matched = append(matched, h.g)
-	}
-	sort.Slice(matched, func(i, j int) bool {
-		ei, ej := hits[matched[i].Name].exact, hits[matched[j].Name].exact
-		if ei != ej {
-			return ei
+		sort.Slice(group, func(i, j int) bool {
+			if group[i].Quality != group[j].Quality {
+				return group[i].Quality > group[j].Quality
+			}
+			if group[i].SongCount != group[j].SongCount {
+				return group[i].SongCount > group[j].SongCount
+			}
+			return group[i].Name < group[j].Name
+		})
+		if len(group) > maxGenresPerWanted {
+			group = group[:maxGenresPerWanted]
 		}
-		if matched[i].SongCount != matched[j].SongCount {
-			return matched[i].SongCount > matched[j].SongCount
-		}
-		return matched[i].Name < matched[j].Name
-	})
-	if len(matched) > maxGenresPerPlaylist {
-		matched = matched[:maxGenresPerPlaylist]
+		groups = append(groups, group)
 	}
-	return matched, missing
+	return groups, missing
 }
 
 // similarGenres suggests library genres similar to a missing genre.

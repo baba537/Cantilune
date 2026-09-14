@@ -50,7 +50,7 @@ The name combines *canticle* (song) and *lune* (French for moon).
 - Four selection modes: Balanced, Favorites, Discover, Recently added
 - Weighted selection based on genre, BPM, ReplayGain, mood, rating and listening history
 - Variety across several days and at most three songs per artist (configurable)
-- Tolerant genre matching, e.g. `Hip-Hop` = `Hip Hop`, and `Hardstyle` also finds `Euphoric Hardstyle`
+- Genre matching on whole words: `Hip-Hop` = `Hip Hop`, `Hardstyle` also finds `Euphoric Hardstyle`, but `Dance` does not pick up `Dancehall`
 - Custom situations with your own filters, configured in the web UI
 - Schedule by time of day or cron expression
 - Public playlists owned by a user of your choice
@@ -193,11 +193,12 @@ Navidrome does not analyze audio. It does, however, read the tags of your music 
 
 Steps for each playlist:
 
-1. **Load candidates.** For every matching genre, random songs are requested through the Subsonic API, about six times as many as needed in total.
-2. **Filter.** Excluded genres, 1-star songs, unsuitable durations and short intros are removed. If too few songs remain, the duration and intro filters are relaxed.
-3. **Weight.** Each song gets a weight from BPM, energy, mood, rating, listening history and selection mode. Songs from recent playlists are weighted down.
-4. **Pick.** Songs are drawn at random according to their weight, with a limit per artist.
-5. **Order.** Depending on the situation, the order is random, rising (e.g. Gym, Party) or falling (e.g. Sleep, Yoga). Songs by the same artist never follow each other directly.
+1. **Match genres.** Each genre of the preset is looked up in your library. Exact names and more specific sub-genres count (`Deep House` for `House`); genres that only share a word stem do not (`Dancehall` for `Dance`, `Reggaeton` for `Reggae`, `Hardcore Punk` for `Hardcore`).
+2. **Load candidates.** Random songs are requested through the Subsonic API, about six times as many as needed. Every genre of the preset gets the same share, so a genre with many sub-genres does not crowd out the others.
+3. **Filter.** Excluded genres, 1-star songs, unsuitable durations and short intros are removed. If too few songs remain, the duration and intro filters are relaxed.
+4. **Weight.** Genre fit counts most: songs tagged exactly with a wanted genre, and songs without many unrelated genre tags, are preferred. BPM, energy, mood, rating, listening history and the selection mode refine the weight. Songs from recent playlists are weighted down.
+5. **Pick.** Songs are drawn at random according to their weight, with a limit per artist and an equal share for each genre of the preset.
+6. **Order.** Depending on the situation, the order is random, rising (e.g. Gym, Party) or falling (e.g. Sleep, Yoga). Songs by the same artist never follow each other directly.
 
 Without BPM, ReplayGain or mood tags, the selection relies on genre and listening history. These tags can be added with tools such as [beets](https://beets.io) or [MusicBrainz Picard](https://picard.musicbrainz.org). Rescan your library in Navidrome afterwards.
 
