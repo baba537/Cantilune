@@ -24,10 +24,17 @@ ND_PID=""
 
 log() { printf '\n==> %s\n' "$*"; }
 fail() {
+  trap - ERR
   printf '\nFAIL: %s\n' "$*" >&2
+  local tail_log=""
   if [[ -f "$WORK/navidrome.log" ]]; then
     echo "--- last 80 lines of the Navidrome log ---" >&2
     tail -n 80 "$WORK/navidrome.log" >&2
+    tail_log="$(grep -iE 'error|warn|plugin|cantilune' "$WORK/navidrome.log" | tail -n 15 | cut -c1-300 | sed ':a;N;$!ba;s/\n/%0A/g')"
+  fi
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "::error title=E2E Navidrome ${ND_VERSION}::$*"
+    [[ -n "$tail_log" ]] && echo "::notice title=Navidrome ${ND_VERSION} log::${tail_log}"
   fi
   exit 1
 }
@@ -35,6 +42,7 @@ cleanup() {
   [[ -n "$ND_PID" ]] && kill "$ND_PID" 2>/dev/null || true
 }
 trap cleanup EXIT
+trap 'fail "command failed (line $LINENO): $BASH_COMMAND"' ERR
 
 export ND_MUSICFOLDER="$WORK/music"
 export ND_DATAFOLDER="$WORK/data"
