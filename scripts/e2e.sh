@@ -112,7 +112,11 @@ songs="$(api getScanStatus | jq -r '.["subsonic-response"].scanStatus.count')"
 stop_navidrome
 
 log "Configuring the plugin with the Navidrome CLI"
-"$WORK/bin/navidrome" plugin validate "$ND_PLUGINS_FOLDER/cantilune.ndp"
+if "$WORK/bin/navidrome" plugin --help 2>&1 | grep -qw validate; then
+  "$WORK/bin/navidrome" plugin validate "$ND_PLUGINS_FOLDER/cantilune.ndp"
+else
+  echo "navidrome plugin validate is not available in ${ND_VERSION}, skipping manifest validation"
+fi
 CONFIG="$(jq -nc '{
   trackCount: 10,
   logDetails: true,
