@@ -192,3 +192,6 @@ log "Passed"
   echo "- Slowest ping during generation: ${max_ping_ms} ms"
   echo "- Plugin log: \`${generation_line}\`"
 } | tee -a "$SUMMARY"
+if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+  echo "::notice title=E2E Navidrome ${ND_VERSION} passed::${songs} songs, 3 playlists verified, cleanup verified, ${elapsed}s until generation finished (incl. 15 s delay), slowest ping ${max_ping_ms} ms. ${generation_line}"
+fi

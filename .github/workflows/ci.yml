@@ -52,7 +52,12 @@ jobs:
       - name: Fuzzing (15 s per target)
         run: make fuzz
       - name: Load profile (100,000 songs, 10 users)
-        run: CANTILUNE_LOAD=1 go test -run TestLoadProfile -v . | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          CANTILUNE_LOAD=1 go test -run TestLoadProfile -v . | tee load.txt
+          grep -E 'library|duration|API calls|memory' load.txt | sed 's/^ *bench_test.go:[0-9]*: //' > load-summary.txt
+          { echo '### Load profile'; cat load-summary.txt; } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Load profile::$(sed ':a;N;$!ba;s/
+/ · /g' load-summary.txt)"
       - name: Known vulnerabilities (govulncheck)
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
 
@@ -76,6 +81,8 @@ jobs:
           make checksums VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
           diff first.sha256 dist/SHA256SUMS
           { echo '### Reproducible build'; echo '```'; cat dist/SHA256SUMS; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Reproducible build ($(go version | cut -d' ' -f3), TinyGo ${TINYGO_VERSION})::$(sed ':a;N;$!ba;s/
+/ · /g' dist/SHA256SUMS)"
       - uses: actions/upload-artifact@v5
         with:
           name: cantilune-ndp
@@ -90,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        navidrome: ["0.62.0", "0.63.2", "0.64.0"]
+        navidrome: ["0.63.2", "0.64.0"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/download-artifact@v5
