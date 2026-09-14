@@ -29,17 +29,31 @@ const (
 	exactGenre              // same genre, spelling differences ignored
 )
 
+var andReplacer = strings.NewReplacer("&", " and ", "'n'", " and ", "’n’", " and ", "+", " and ")
+
+// genreWordCache memoizes genreWords: the same few hundred genre names are
+// compared many thousand times per run. The plugin runs single-threaded.
+var genreWordCache = map[string][]string{}
+
+const maxGenreWordCache = 5000
+
 // genreWords splits a genre name into lowercase words. "&", "'n'" and a
 // single "n" become "and", so "Drum & Bass", "Drum'n'Bass" and "Drum n Bass"
-// are equal.
+// are equal. The returned slice must not be modified.
 func genreWords(s string) []string {
-	s = strings.NewReplacer("&", " and ", "'n'", " and ", "’n’", " and ", "+", " and ").Replace(strings.ToLower(s))
-	words := strings.FieldsFunc(s, func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
+	if words, ok := genreWordCache[s]; ok {
+		return words
+	}
+	words := strings.FieldsFunc(andReplacer.Replace(strings.ToLower(s)), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
 	for i, w := range words {
 		if w == "n" {
 			words[i] = "and"
 		}
 	}
+	if len(genreWordCache) >= maxGenreWordCache {
+		genreWordCache = map[string][]string{}
+	}
+	genreWordCache[s] = words
 	return words
 }
 
