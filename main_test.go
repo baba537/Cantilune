@@ -167,9 +167,9 @@ func TestSelectionIgnoresSimilarlyNamedGenres(t *testing.T) {
 	f.addSongs("EDM", 40, nil)
 	useFake(t, f)
 
-	g := newGenerator(cat, Settings{MaxPerArtist: 0}, false)
+	g := newGenerator(cat, Settings{MaxPerArtist: 0, Weights: defaultWeights()}, false)
 	job := Job{Name: "t", User: "admin", Count: 60, Recipe: catalog.Recipe{Genres: []string{"Dance", "House", "EDM"}}}
-	ids, st, err := g.selectSongs(job, nil)
+	ids, st, err := g.selectSongs(job, songContext{})
 	if err != nil || len(ids) != 60 {
 		t.Fatalf("%d songs, %v", len(ids), err)
 	}
@@ -318,10 +318,63 @@ type fakeServer struct {
 	nextID    int
 	rng       *rand.Rand
 	kv        map[string][]byte
+
+	// genre index, rebuilt when songs change
+	indexed int
+	byGenre map[string][]int // lower(genre) -> song indices
+	genres  []libraryGenre
+	byID    map[string]int
 }
 
 func newFakeServer() *fakeServer {
 	return &fakeServer{rng: rand.New(rand.NewSource(1))}
+}
+
+// index mimics Navidrome: every genre tag of a song is searchable, and the
+// genre filter of getRandomSongs is case-insensitive (SQL LIKE without wildcards).
+func (f *fakeServer) index() {
+	if f.indexed == len(f.songs) && f.byGenre != nil {
+		return
+	}
+	f.byGenre = map[string][]int{}
+	f.byID = map[string]int{}
+	names := map[string]string{}
+	var order []string
+	for i, s := range f.songs {
+		f.byID[s.ID] = i
+		for _, g := range songGenres(s) {
+			key := strings.ToLower(g)
+			if _, ok := names[key]; !ok {
+				names[key] = g
+				order = append(order, key)
+			}
+			f.byGenre[key] = append(f.byGenre[key], i)
+		}
+	}
+	f.genres = f.genres[:0]
+	for _, key := range order {
+		f.genres = append(f.genres, libraryGenre{Name: names[key], SongCount: len(f.byGenre[key])})
+	}
+	f.indexed = len(f.songs)
+}
+
+// randomSongs returns up to size random songs from indices (partial Fisher-Yates).
+func (f *fakeServer) randomSongs(indices []int, size, from, to int) []song {
+	idx := make([]int, 0, len(indices))
+	for _, i := range indices {
+		if s := f.songs[i]; (from > 0 && s.Year < from) || (to > 0 && s.Year > to) {
+			continue
+		}
+		idx = append(idx, i)
+	}
+	n := min(size, len(idx))
+	out := make([]song, n)
+	for k := 0; k < n; k++ {
+		j := k + f.rng.Intn(len(idx)-k)
+		idx[k], idx[j] = idx[j], idx[k]
+		out[k] = f.songs[idx[k]]
+	}
+	return out
 }
 
 func (f *fakeServer) addSongs(genre string, n int, mut func(i int, s *song)) {
@@ -375,34 +428,23 @@ func (f *fakeServer) call(uri string) (string, error) {
 	resp := map[string]any{"status": "ok"}
 	switch endpoint {
 	case "getGenres":
-		counts := map[string]int{}
-		for _, s := range f.songs {
-			counts[s.Genre]++
-		}
-		var list []libraryGenre
-		for g, n := range counts {
-			list = append(list, libraryGenre{Name: g, SongCount: n})
-		}
-		resp["genres"] = map[string]any{"genre": list}
+		f.index()
+		resp["genres"] = map[string]any{"genre": f.genres}
 	case "getRandomSongs":
+		f.index()
 		size, _ := strconv.Atoi(q.Get("size"))
 		from, _ := strconv.Atoi(q.Get("fromYear"))
 		to, _ := strconv.Atoi(q.Get("toYear"))
-		var pool []song
-		for _, s := range f.songs {
-			if g := q.Get("genre"); g != "" && s.Genre != g {
-				continue
+		var indices []int
+		if g := q.Get("genre"); g != "" {
+			indices = f.byGenre[strings.ToLower(g)]
+		} else {
+			indices = make([]int, len(f.songs))
+			for i := range indices {
+				indices[i] = i
 			}
-			if (from > 0 && s.Year < from) || (to > 0 && s.Year > to) {
-				continue
-			}
-			pool = append(pool, s)
 		}
-		f.rng.Shuffle(len(pool), func(i, j int) { pool[i], pool[j] = pool[j], pool[i] })
-		if len(pool) > size {
-			pool = pool[:size]
-		}
-		resp["randomSongs"] = map[string]any{"song": pool}
+		resp["randomSongs"] = map[string]any{"song": f.randomSongs(indices, size, from, to)}
 	case "getPlaylists":
 		var list []playlist
 		for _, p := range f.playlists {
@@ -421,6 +463,13 @@ func (f *fakeServer) call(uri string) (string, error) {
 				resp["playlist"] = pl
 			}
 		}
+	case "getSong":
+		f.index()
+		if i, ok := f.byID[q.Get("id")]; ok {
+			resp["song"] = f.songs[i]
+		} else {
+			resp = map[string]any{"status": "failed", "error": map[string]any{"code": 70, "message": "Song not found"}}
+		}
 	case "createPlaylist":
 		f.nextID++
 		p := &fakePlaylist{
@@ -434,6 +483,9 @@ func (f *fakeServer) call(uri string) (string, error) {
 			if p.ID == q.Get("playlistId") {
 				p.public = q.Get("public") == "true"
 				p.Comment = q.Get("comment")
+				if name := q.Get("name"); name != "" {
+					p.Name = name
+				}
 			}
 		}
 	case "deletePlaylist":
@@ -527,8 +579,8 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 			seen := map[string]bool{}
 			for d := 0; d < 14; d++ {
 				nowFn = func() time.Time { return start.Add(time.Duration(d) * day) }
-				g := newGenerator(cat, Settings{MaxPerArtist: 3, HistoryDays: historyDays}, false)
-				ids, _, err := g.selectSongs(job, g.loadHistory(job.ID))
+				g := newGenerator(cat, Settings{MaxPerArtist: 3, HistoryDays: historyDays, Weights: defaultWeights()}, false)
+				ids, _, err := g.selectSongs(job, songContext{Recent: g.loadHistory(job.ID, job.User)})
 				if err != nil || len(ids) != 30 {
 					t.Fatalf("day %d: %d songs, %v", d, len(ids), err)
 				}
@@ -541,7 +593,7 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 				for _, id := range ids {
 					seen[id] = true // only count repeats compared to the previous day
 				}
-				g.saveHistory(job.ID, ids)
+				g.saveHistory(job.ID, job.User, ids)
 			}
 		}
 		return total
@@ -557,8 +609,8 @@ func TestHistoryAvoidsRepeatsAcrossDays(t *testing.T) {
 	}
 
 	g := newGenerator(cat, Settings{HistoryDays: 0}, false)
-	g.saveHistory("off", []string{"x"})
-	if _, ok := f.kv[historyKey("off", testNow)]; ok {
+	g.saveHistory("off", "admin", []string{"x"})
+	if _, ok := f.kv[historyKey("off", "admin", testNow)]; ok {
 		t.Error("history stored although historyDays=0")
 	}
 }
@@ -573,7 +625,7 @@ func TestRemoveAllDeletesOnlyCantilunePlaylists(t *testing.T) {
 		{playlist: playlist{ID: "d", Name: "🎧 My own", Owner: "admin"}},
 	}
 	useFake(t, f)
-	f.kv[historyKey("gym", testNow)] = []byte("x")
+	f.kv[historyKey("gym", "admin", testNow)] = []byte("x")
 
 	cfg := onlyEnabled(cat, map[string]string{"gym": ""})
 	cfg[catalog.KeyRemoveAll] = "true"
@@ -723,8 +775,8 @@ func TestFavoritesModePrefersStarredSongs(t *testing.T) {
 			}
 		})
 		useFake(t, f)
-		g := newGenerator(cat, Settings{MaxPerArtist: 3, SkipInterludes: true}, false)
-		ids, _, err := g.selectSongs(Job{Name: "t", User: "admin", Count: 30, Mode: mode, Recipe: catalog.Recipe{Genres: []string{"Rock"}}}, nil)
+		g := newGenerator(cat, Settings{MaxPerArtist: 3, SkipInterludes: true, Weights: defaultWeights()}, false)
+		ids, _, err := g.selectSongs(Job{Name: "t", User: "admin", Count: 30, Mode: mode, Recipe: catalog.Recipe{Genres: []string{"Rock"}}}, songContext{})
 		if err != nil || len(ids) != 30 {
 			t.Fatalf("%s: %d songs, %v", mode, len(ids), err)
 		}

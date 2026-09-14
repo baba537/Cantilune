@@ -30,7 +30,29 @@ const (
 	KeyExcludeGenres    = "excludeGenres"
 	KeyCustomSituations = "customSituations"
 	KeyRemoveAll        = "removeAllPlaylists"
+	KeyAudience         = "audience"
+	KeyLanguage         = "playlistLanguage"
+	KeyWeightGenre      = "weightGenre"
+	KeyWeightTempo      = "weightTempo"
+	KeyWeightPreference = "weightPreference"
+	KeyWeightVariety    = "weightVariety"
+	KeyLearnFromEdits   = "learnFromEdits"
+	KeyLogDetails       = "logDetails"
+	KeyDryRun           = "dryRun"
+	KeyArchiveDays      = "archiveDays"
 )
+
+// Audience values (dropdown).
+const (
+	AudienceShared   = "Shared"
+	AudiencePersonal = "Personal"
+)
+
+// Audiences lists the audience options in display order.
+var Audiences = []string{AudienceShared, AudiencePersonal}
+
+// DefaultWeight is the neutral weight of a factor group in percent.
+const DefaultWeight = 100
 
 // kv/obj build a JSON object with a fixed key order.
 type kv struct {
@@ -132,11 +154,22 @@ func BuildManifest() ([]byte, error) {
 		{KeySkipInterludes, obj{{"type", "boolean"}, {"title", "Skip short intros, skits and interludes"}, {"default", true}}},
 		{KeyExcludeGenres, append(stringList("Never use these genres", "Applies to all playlists unless a preset explicitly includes the genre."), kv{"default", DefaultExcludeGenres})},
 		{KeyRemoveAll, obj{{"type", "boolean"}, {"title", "Delete all Cantilune playlists and pause the plugin"}, {"description", "Enable and save before uninstalling. Navidrome does not notify plugins when they are removed, so Cantilune cannot clean up afterwards."}, {"default", false}}},
+		{KeyAudience, obj{{"type", "string"}, {"title", "Playlists for"}, {"description", "Shared: one playlist owned by the owner, based on the owner's favorites and history. Personal: a private playlist for every permitted user, based on that user's own data."}, {"enum", Audiences}, {"default", AudienceShared}}},
+		{KeyLanguage, obj{{"type", "string"}, {"title", "Playlist language"}, {"description", "Language of situation and preset names in playlist names and comments"}, {"enum", Languages}, {"default", LanguageEnglish}}},
+		{KeyWeightGenre, intProp("Genre fit (%)", "How strongly exact genre matches are preferred, 0 = ignore", 0, 200, DefaultWeight)},
+		{KeyWeightTempo, intProp("Tempo, energy, mood (%)", "Influence of BPM, ReplayGain and mood tags, 0 = ignore", 0, 200, DefaultWeight)},
+		{KeyWeightPreference, intProp("Favorites & ratings (%)", "Influence of favorites, ratings, play counts and the selection mode, 0 = ignore", 0, 200, DefaultWeight)},
+		{KeyWeightVariety, intProp("Variety (%)", "How strongly recently played songs and recent playlists are avoided, 0 = ignore", 0, 200, DefaultWeight)},
+		{KeyLearnFromEdits, obj{{"type", "boolean"}, {"title", "Learn from playlist edits"}, {"description", "Songs you remove from a Cantilune playlist are avoided for 60 days, songs you add are preferred"}, {"default", true}}},
+		{KeyLogDetails, obj{{"type", "boolean"}, {"title", "Log why each song was chosen"}, {"default", false}}},
+		{KeyDryRun, obj{{"type", "boolean"}, {"title", "Preview only (log the selection, do not change playlists)"}, {"default", false}}},
+		{KeyArchiveDays, intProp("Archive (days)", "Keep replaced playlists as private archive with date, 0 = delete immediately", 0, 30, 0)},
 	}
 
 	ui := []any{
 		group("General",
 			horizontal(control("#/properties/"+KeyPrefix), control("#/properties/"+KeyDefaultUser), control("#/properties/"+KeyTrackCount)),
+			horizontal(control("#/properties/"+KeyAudience), control("#/properties/"+KeyLanguage)),
 			horizontal(control("#/properties/"+KeyPublicPlaylists), control("#/properties/"+KeyShowPresetInName)),
 		),
 		group("Schedule",
@@ -146,7 +179,12 @@ func BuildManifest() ([]byte, error) {
 		group("Selection",
 			horizontal(control("#/properties/"+KeyMaxPerArtist), control("#/properties/"+KeyAvoidRecentDays), control("#/properties/"+KeyHistoryDays)),
 			control("#/properties/"+KeySkipInterludes),
+			control("#/properties/"+KeyLearnFromEdits),
 			control("#/properties/"+KeyExcludeGenres),
+		),
+		group("Weights & transparency",
+			horizontal(control("#/properties/"+KeyWeightGenre), control("#/properties/"+KeyWeightTempo), control("#/properties/"+KeyWeightPreference), control("#/properties/"+KeyWeightVariety)),
+			horizontal(control("#/properties/"+KeyLogDetails), control("#/properties/"+KeyDryRun)),
 		),
 	}
 
@@ -230,7 +268,7 @@ func BuildManifest() ([]byte, error) {
 		}},
 	}})))
 
-	ui = append(ui, group("🧹 Cleanup", control("#/properties/"+KeyRemoveAll)))
+	ui = append(ui, group("🧹 Cleanup", control("#/properties/"+KeyArchiveDays), control("#/properties/"+KeyRemoveAll)))
 
 	manifest := obj{
 		{"name", PluginName},

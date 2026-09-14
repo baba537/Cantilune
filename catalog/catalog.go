@@ -84,10 +84,20 @@ type Recipe struct {
 	ExcludeExplicit bool     `json:"excludeExplicit,omitempty"`
 }
 
+// Playlist languages (dropdown values).
+const (
+	LanguageEnglish = "English"
+	LanguageGerman  = "Deutsch"
+)
+
+// Languages lists the supported playlist languages in display order.
+var Languages = []string{LanguageEnglish, LanguageGerman}
+
 // Preset is a selectable variant of a situation.
 type Preset struct {
-	Name  string `json:"name"`
-	Emoji string `json:"emoji,omitempty"`
+	Name   string `json:"name"`
+	NameDe string `json:"nameDe,omitempty"`
+	Emoji  string `json:"emoji,omitempty"`
 	// Mix combines the genres of all other presets of the situation.
 	Mix bool `json:"mix,omitempty"`
 	Recipe
@@ -97,6 +107,7 @@ type Preset struct {
 type Situation struct {
 	ID       string   `json:"id"`
 	Name     string   `json:"name"`
+	NameDe   string   `json:"nameDe,omitempty"`
 	Emoji    string   `json:"emoji"`
 	Category string   `json:"category"`
 	Enabled  bool     `json:"enabled"`
@@ -198,20 +209,34 @@ func (s Situation) PresetLabels() []string {
 	return out
 }
 
-// FindPreset looks up a preset by its dropdown text. Labels from earlier
-// German versions are recognized. Unknown values return the first preset.
+// FindPreset looks up a preset by its dropdown text. German labels saved by
+// versions before 1.1.0 are recognized. Unknown values return the first preset.
 func (s Situation) FindPreset(label string) (Preset, bool) {
 	label = strings.TrimSpace(label)
 	name := strings.TrimSpace(strings.TrimSuffix(label, s.emojiOf(label)))
-	if en, ok := legacyPresetNames[name]; ok {
-		name = en
-	}
 	for _, p := range s.Presets {
-		if s.PresetLabel(p) == label || strings.EqualFold(p.Name, label) || strings.EqualFold(p.Name, name) {
+		if s.PresetLabel(p) == label || strings.EqualFold(p.Name, label) || strings.EqualFold(p.Name, name) ||
+			(p.NameDe != "" && strings.EqualFold(p.NameDe, name)) {
 			return p, true
 		}
 	}
 	return s.Presets[0], false
+}
+
+// DisplayName returns the situation name in the given playlist language.
+func (s Situation) DisplayName(language string) string {
+	if language == LanguageGerman && s.NameDe != "" {
+		return s.NameDe
+	}
+	return s.Name
+}
+
+// DisplayName returns the preset name in the given playlist language.
+func (p Preset) DisplayName(language string) string {
+	if language == LanguageGerman && p.NameDe != "" {
+		return p.NameDe
+	}
+	return p.Name
 }
 
 // emojiOf returns the preset emoji that label ends with, if any.

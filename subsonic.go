@@ -64,6 +64,7 @@ type subsonicResponse struct {
 	RandomSongs *struct {
 		Song []song `json:"song"`
 	} `json:"randomSongs"`
+	Song      *song     `json:"song"`
 	Playlist  *playlist `json:"playlist"`
 	Playlists *struct {
 		Playlist []playlist `json:"playlist"`
@@ -204,6 +205,28 @@ func updatePlaylistMeta(user, id string, public bool, comment string) error {
 	q.Set("comment", comment)
 	_, err := callAPI(user, "updatePlaylist", q)
 	return err
+}
+
+// archivePlaylist renames a playlist, makes it private and replaces its comment.
+func archivePlaylist(user, id, name, comment string) error {
+	q := url.Values{}
+	q.Set("playlistId", id)
+	q.Set("name", name)
+	q.Set("public", "false")
+	q.Set("comment", comment)
+	_, err := callAPI(user, "updatePlaylist", q)
+	return err
+}
+
+// fetchSong loads a single song with its metadata.
+func fetchSong(user, id string) (*song, error) {
+	q := url.Values{}
+	q.Set("id", id)
+	resp, err := callAPI(user, "getSong", q)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Song, nil
 }
 
 func deletePlaylist(user, id string) error {

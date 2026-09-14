@@ -111,6 +111,82 @@
           "description": "Enable and save before uninstalling. Navidrome does not notify plugins when they are removed, so Cantilune cannot clean up afterwards.",
           "default": false
         },
+        "audience": {
+          "type": "string",
+          "title": "Playlists for",
+          "description": "Shared: one playlist owned by the owner, based on the owner's favorites and history. Personal: a private playlist for every permitted user, based on that user's own data.",
+          "enum": [
+            "Shared",
+            "Personal"
+          ],
+          "default": "Shared"
+        },
+        "playlistLanguage": {
+          "type": "string",
+          "title": "Playlist language",
+          "description": "Language of situation and preset names in playlist names and comments",
+          "enum": [
+            "English",
+            "Deutsch"
+          ],
+          "default": "English"
+        },
+        "weightGenre": {
+          "type": "integer",
+          "title": "Genre fit (%)",
+          "description": "How strongly exact genre matches are preferred, 0 = ignore",
+          "minimum": 0,
+          "maximum": 200,
+          "default": 100
+        },
+        "weightTempo": {
+          "type": "integer",
+          "title": "Tempo, energy, mood (%)",
+          "description": "Influence of BPM, ReplayGain and mood tags, 0 = ignore",
+          "minimum": 0,
+          "maximum": 200,
+          "default": 100
+        },
+        "weightPreference": {
+          "type": "integer",
+          "title": "Favorites & ratings (%)",
+          "description": "Influence of favorites, ratings, play counts and the selection mode, 0 = ignore",
+          "minimum": 0,
+          "maximum": 200,
+          "default": 100
+        },
+        "weightVariety": {
+          "type": "integer",
+          "title": "Variety (%)",
+          "description": "How strongly recently played songs and recent playlists are avoided, 0 = ignore",
+          "minimum": 0,
+          "maximum": 200,
+          "default": 100
+        },
+        "learnFromEdits": {
+          "type": "boolean",
+          "title": "Learn from playlist edits",
+          "description": "Songs you remove from a Cantilune playlist are avoided for 60 days, songs you add are preferred",
+          "default": true
+        },
+        "logDetails": {
+          "type": "boolean",
+          "title": "Log why each song was chosen",
+          "default": false
+        },
+        "dryRun": {
+          "type": "boolean",
+          "title": "Preview only (log the selection, do not change playlists)",
+          "default": false
+        },
+        "archiveDays": {
+          "type": "integer",
+          "title": "Archive (days)",
+          "description": "Keep replaced playlists as private archive with date, 0 = delete immediately",
+          "minimum": 0,
+          "maximum": 30,
+          "default": 0
+        },
         "gym": {
           "type": "object",
           "title": "Gym 💪",
@@ -1771,6 +1847,19 @@
               "elements": [
                 {
                   "type": "Control",
+                  "scope": "#/properties/audience"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/playlistLanguage"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
                   "scope": "#/properties/publicPlaylists"
                 },
                 {
@@ -1831,7 +1920,51 @@
             },
             {
               "type": "Control",
+              "scope": "#/properties/learnFromEdits"
+            },
+            {
+              "type": "Control",
               "scope": "#/properties/excludeGenres"
+            }
+          ]
+        },
+        {
+          "type": "Group",
+          "label": "Weights & transparency",
+          "elements": [
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/weightGenre"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/weightTempo"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/weightPreference"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/weightVariety"
+                }
+              ]
+            },
+            {
+              "type": "HorizontalLayout",
+              "elements": [
+                {
+                  "type": "Control",
+                  "scope": "#/properties/logDetails"
+                },
+                {
+                  "type": "Control",
+                  "scope": "#/properties/dryRun"
+                }
+              ]
             }
           ]
         },
@@ -2752,6 +2885,10 @@
           "type": "Group",
           "label": "🧹 Cleanup",
           "elements": [
+            {
+              "type": "Control",
+              "scope": "#/properties/archiveDays"
+            },
             {
               "type": "Control",
               "scope": "#/properties/removeAllPlaylists"

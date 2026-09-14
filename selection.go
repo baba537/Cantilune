@@ -17,16 +17,21 @@ const (
 	maxRandomSongsPerCall = 500 // limit of getRandomSongs
 	maxTracksPerPlaylist  = 500
 	maxGenresPerWanted    = 12 // library genres queried per wanted genre
+	maxGenreQueries       = 40 // getRandomSongs calls per playlist
 	minSongsPerGenre      = 10
 	maxPoolSize           = 1500
+	maxAddedSongs         = 25  // songs added by the user that are loaded individually
 	poolFactor            = 6   // candidates per requested track
 	interludeMaxSeconds   = 150 // only short "intro"/"skit" tracks count as interludes
+	maxTransition         = 2.4 // largest value of transition()
 	day                   = 24 * time.Hour
 )
 
 // Reasons for filtered songs (for the log).
 const (
 	reasonExcludedGenre = "excluded genre"
+	reasonGenreMismatch = "genre mismatch"
+	reasonRemoved       = "removed by user"
 	reasonDisliked      = "rated 1 star"
 	reasonExplicit      = "explicit"
 	reasonDuration      = "duration"
@@ -34,12 +39,50 @@ const (
 	reasonYear          = "year"
 )
 
+// songContext holds data about earlier playlists of the same situation and owner.
+type songContext struct {
+	Recent   map[string]int // song ID → days since it was in a playlist (0 = current playlist)
+	Feedback map[string]int // song ID → -1 removed or +1 added by the user
+}
+
+// weightParts are the factor groups that make up the weight of a song.
+// Every group is 1 when neutral; the weight is their product.
+type weightParts struct {
+	Genre      float64 // fit of the genre tags
+	Tempo      float64 // BPM, mood and energy
+	Preference float64 // favorites, ratings, play count, selection mode
+	Variety    float64 // recently played, recent playlists
+	Feedback   float64 // songs added to the playlist by the user
+}
+
+func (p weightParts) total() float64 {
+	return math.Max(p.Genre*p.Tempo*p.Preference*p.Variety*p.Feedback, 0.001)
+}
+
 type candidate struct {
 	s      song
+	parts  weightParts
 	weight float64
-	energy float64 // 0 (calm) … 1 (energetic), -1 = unknown
+	energy float64  // 0 (calm) … 1 (energetic), -1 = unknown
+	genres []string // normalized genre names
 	key    float64
 	group  int // index of the wanted genre the song was loaded for, -1 = none
+}
+
+// songDetail explains why a song was chosen.
+type songDetail struct {
+	Song   song
+	Parts  weightParts
+	Weight float64
+}
+
+// playlistQuality describes a generated playlist with simple, comparable metrics.
+type playlistQuality struct {
+	ExactGenre    float64 // share of songs tagged exactly with a wanted genre, -1 = preset without genres
+	UniqueArtists float64 // distinct artists / songs
+	Repeats       float64 // share of songs that were already in the previous playlist
+	Tagged        float64 // share of songs with BPM or ReplayGain tags
+	Coherence     float64 // 0 … 1, similarity of neighbouring songs (genre, year, energy)
 }
 
 type selectionStats struct {
@@ -49,30 +92,35 @@ type selectionStats struct {
 	Candidates int
 	Rejected   map[string]int
 	Relaxed    bool
+	Added      int
 	WithBPM    int
 	WithGain   int
 	Favorites  int
+	Quality    playlistQuality
+	Details    []songDetail
 }
 
 // selectSongs picks the songs of a playlist:
-//  1. load candidates with getRandomSongs (per matching library genre)
-//  2. hard filters (excluded genres, 1 star, explicit, duration, intros)
-//  3. weighting by genre fit, BPM, energy (BPM + ReplayGain), mood, favorites,
-//     rating, play count, last played and recent playlists
+//  1. load candidates with getRandomSongs (per matching library genre) plus
+//     songs the user added to the previous playlist
+//  2. hard filters (excluded genres, genre mismatch, removed by the user,
+//     1 star, explicit, duration, intros)
+//  3. weighting by genre fit, tempo/energy/mood, favorites/ratings and variety
 //  4. weighted random selection with a limit per artist and per wanted genre
-//  5. ordering by flow (random, rising, falling)
-func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selectionStats, error) {
+//  5. ordering by flow (rising, falling) or by similarity of neighbouring songs
+func (g *generator) selectSongs(job Job, ctx songContext) ([]string, selectionStats, error) {
 	st := selectionStats{Rejected: map[string]int{}}
 	pool, groupOf, err := g.gatherCandidates(job, &st)
 	if err != nil {
 		return nil, st, err
 	}
+	pool = g.addUserSongs(job, ctx, pool, groupOf, &st)
 	st.Candidates = len(pool)
 
-	kept := g.applyFilters(pool, job.Recipe, true, st.Rejected)
+	kept := g.applyFilters(pool, job.Recipe, ctx, true, st.Rejected)
 	if len(kept) < job.Count && st.Rejected[reasonDuration]+st.Rejected[reasonInterlude] > 0 {
 		st.Rejected = map[string]int{}
-		kept = g.applyFilters(pool, job.Recipe, false, st.Rejected)
+		kept = g.applyFilters(pool, job.Recipe, ctx, false, st.Rejected)
 		st.Relaxed = true
 	}
 	if len(kept) == 0 {
@@ -86,7 +134,13 @@ func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selec
 		if !ok {
 			group = -1
 		}
-		cands[i] = candidate{s: s, energy: songEnergy(s), weight: g.score(s, job, recent, now), group: group}
+		parts := g.scoreParts(s, job, ctx, now)
+		genres := songGenres(s)
+		normalized := make([]string, len(genres))
+		for k, name := range genres {
+			normalized[k] = normalizeGenre(name)
+		}
+		cands[i] = candidate{s: s, parts: parts, weight: parts.total(), energy: songEnergy(s), genres: normalized, group: group}
 	}
 	chosen := g.pick(cands, job.Count)
 	for _, c := range chosen {
@@ -101,16 +155,20 @@ func (g *generator) selectSongs(job Job, recent map[string]int) ([]string, selec
 		}
 	}
 
-	songs := g.order(chosen, job.Recipe.Flow)
-	ids := make([]string, len(songs))
-	for i, s := range songs {
-		ids[i] = s.ID
+	ordered := g.order(chosen, job.Recipe.Flow)
+	st.Quality = measureQuality(ordered, job.Recipe, ctx)
+	ids := make([]string, len(ordered))
+	for i, c := range ordered {
+		ids[i] = c.s.ID
+		if g.cfg.LogDetails {
+			st.Details = append(st.Details, songDetail{Song: c.s, Parts: c.parts, Weight: c.weight})
+		}
 	}
 	return ids, st, nil
 }
 
 // gatherCandidates loads the candidate pool. groupOf maps each song ID to the
-// index of the wanted genre it was loaded for (empty without genres).
+// index of the wanted genre it was loaded for (-1 without genres).
 func (g *generator) gatherCandidates(job Job, st *selectionStats) (pool []song, groupOf map[string]int, err error) {
 	r := job.Recipe
 	target := clamp(job.Count*poolFactor, 150, maxPoolSize)
@@ -164,6 +222,14 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) (pool []song, 
 		return nil, groupOf, nil
 	}
 
+	// Limit the number of queries: every wanted genre keeps its best matches.
+	perGroupQueries := max(maxGenreQueries/len(groups), 1)
+	for i := range groups {
+		if len(groups[i]) > perGroupQueries {
+			groups[i] = groups[i][:perGroupQueries]
+		}
+	}
+
 	// Every wanted genre gets the same share of the pool, so a genre with many
 	// sub-genres in the library (e.g. House) does not crowd out the others.
 	// Within a wanted genre, the share is split by the size of each library genre.
@@ -193,7 +259,7 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) (pool []song, 
 	var lastErr error
 	succeeded := 0
 	for _, gen := range order {
-		songs, err := fetchRandomSongs(job.User, gen.Name, sizes[gen.Name], r.FromYear, r.ToYear)
+		songs, err := fetchRandomSongs(job.User, gen.Name, min(sizes[gen.Name], maxRandomSongsPerCall), r.FromYear, r.ToYear)
 		if err != nil {
 			logf(pdk.LogWarn, "%s: could not load songs for genre %q: %v", job.Name, gen.Name, err)
 			lastErr = err
@@ -206,6 +272,31 @@ func (g *generator) gatherCandidates(job Job, st *selectionStats) (pool []song, 
 		return nil, nil, lastErr
 	}
 	return pool, groupOf, nil
+}
+
+// addUserSongs loads songs the user added to the previous playlist, so they
+// can appear again even if the random query did not return them.
+func (g *generator) addUserSongs(job Job, ctx songContext, pool []song, groupOf map[string]int, st *selectionStats) []song {
+	ids := make([]string, 0)
+	for id, v := range ctx.Feedback {
+		if _, loaded := groupOf[id]; v > 0 && !loaded {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	if len(ids) > maxAddedSongs {
+		ids = ids[:maxAddedSongs]
+	}
+	for _, id := range ids {
+		s, err := fetchSong(job.User, id)
+		if err != nil || s == nil || s.ID == "" {
+			continue // the song may have been removed from the library
+		}
+		groupOf[s.ID] = -1
+		pool = append(pool, *s)
+		st.Added++
+	}
+	return pool
 }
 
 // libraryGenres loads the genre list once per user; nil = unavailable.
@@ -223,7 +314,7 @@ func (g *generator) libraryGenres(user string) []libraryGenre {
 	return list
 }
 
-func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rejected map[string]int) []song {
+func (g *generator) applyFilters(pool []song, r catalog.Recipe, ctx songContext, strict bool, rejected map[string]int) []song {
 	// Global exclusions do not apply if the recipe explicitly asks for the genre.
 	var excludes []string
 	for _, e := range g.cfg.ExcludeGenres {
@@ -244,10 +335,17 @@ func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rej
 
 	kept := make([]song, 0, len(pool))
 	for _, s := range pool {
+		addedByUser := ctx.Feedback[s.ID] > 0
 		reason := ""
 		switch {
+		case ctx.Feedback[s.ID] < 0:
+			reason = reasonRemoved
 		case len(excludes) > 0 && containsAnyGenre(songGenres(s), excludes):
 			reason = reasonExcludedGenre
+		// Navidrome filters genres with SQL LIKE, so "_" and "%" in a genre name
+		// can match other genres. Verify the tags of every song.
+		case len(r.Genres) > 0 && !addedByUser && bestGenreMatch(songGenres(s), r.Genres) == noMatch:
+			reason = reasonGenreMismatch
 		case s.UserRating == 1:
 			reason = reasonDisliked
 		case r.ExcludeExplicit && strings.EqualFold(s.ExplicitStatus, "explicit"):
@@ -268,14 +366,57 @@ func (g *generator) applyFilters(pool []song, r catalog.Recipe, strict bool, rej
 	return kept
 }
 
-// score calculates the selection weight of a song (1 = neutral).
-func (g *generator) score(s song, job Job, recent map[string]int, now time.Time) float64 {
+// scoreParts calculates the factor groups of a song. The configured weights
+// scale each group: factor^(weight/100), so 0 % ignores a group and 200 %
+// doubles its effect on a logarithmic scale.
+func (g *generator) scoreParts(s song, job Job, ctx songContext, now time.Time) weightParts {
 	r := job.Recipe
+	w := g.cfg.Weights
+
+	variety := 1.0
+	if g.cfg.AvoidRecentDays > 0 && s.Played != nil && now.Sub(*s.Played) < time.Duration(g.cfg.AvoidRecentDays)*day {
+		variety *= 0.3
+	}
+	// Songs the user added to the playlist are wanted, so they are not treated as repeats.
+	if age, ok := ctx.Recent[s.ID]; ok && ctx.Feedback[s.ID] <= 0 {
+		variety *= repeatFactor(age)
+	}
+
+	tempo := bpmFactor(s.BPM, r.MinBPM, r.MaxBPM) * moodFactor(s.Moods, r.Moods)
+	if r.Energy != "" {
+		if e := songEnergy(s); e >= 0 {
+			tempo *= energyFactor(r.Energy, e)
+		}
+	}
+
+	feedback := 1.0
+	if ctx.Feedback[s.ID] > 0 {
+		feedback = 2.5
+	}
+
+	return weightParts{
+		Genre:      weighted(genreFactor(songGenres(s), r.Genres), w.Genre),
+		Tempo:      weighted(tempo, w.Tempo),
+		Preference: weighted(preferenceFactor(s, job.Mode, now), w.Preference),
+		Variety:    weighted(variety, w.Variety),
+		Feedback:   feedback,
+	}
+}
+
+func weighted(factor float64, percent int) float64 {
+	if percent == catalog.DefaultWeight {
+		return factor
+	}
+	return math.Pow(factor, float64(percent)/100)
+}
+
+// preferenceFactor weights favorites, ratings and play history according to the selection mode.
+func preferenceFactor(s song, mode string, now time.Time) float64 {
 	w := 1.0
 	starred := s.Starred != nil
 	familiarity := math.Log2(1 + float64(s.PlayCount))
 
-	switch job.Mode {
+	switch mode {
 	case catalog.ModeFavorites:
 		if starred {
 			w *= 4
@@ -319,22 +460,7 @@ func (g *generator) score(s song, job Job, recent map[string]int, now time.Time)
 		w *= ratingFactor(s.UserRating, 2, 1.5, 0.5)
 		w *= 1 + math.Min(0.5, 0.1*familiarity)
 	}
-
-	if g.cfg.AvoidRecentDays > 0 && s.Played != nil && now.Sub(*s.Played) < time.Duration(g.cfg.AvoidRecentDays)*day {
-		w *= 0.3
-	}
-	if age, ok := recent[s.ID]; ok {
-		w *= repeatFactor(age) // variety compared to recent playlists
-	}
-	w *= genreFactor(songGenres(s), r.Genres)
-	w *= bpmFactor(s.BPM, r.MinBPM, r.MaxBPM)
-	w *= moodFactor(s.Moods, r.Moods)
-	if r.Energy != "" {
-		if e := songEnergy(s); e >= 0 {
-			w *= energyFactor(r.Energy, e)
-		}
-	}
-	return math.Max(w, 0.001)
+	return w
 }
 
 // ratingFactor weights the user's star rating (0 = unrated).
@@ -471,7 +597,7 @@ func (g *generator) pick(cands []candidate, count int) []candidate {
 		}
 		cands[i].key = -math.Log(u) / cands[i].weight
 	}
-	sort.Slice(cands, func(i, j int) bool { return cands[i].key < cands[j].key })
+	sort.SliceStable(cands, func(i, j int) bool { return cands[i].key < cands[j].key })
 
 	groups := map[int]bool{}
 	for _, c := range cands {
@@ -515,8 +641,11 @@ func (g *generator) pick(cands []candidate, count int) []candidate {
 	return chosen
 }
 
-// order sorts by flow and spreads out songs by the same artist.
-func (g *generator) order(chosen []candidate, flow string) []song {
+// order arranges the songs. Rising and falling flows sort by estimated energy
+// when enough songs have BPM or ReplayGain tags. Otherwise songs are chained so
+// that neighbours are similar in genre, year and energy. Finally, songs by the
+// same artist are spread apart.
+func (g *generator) order(chosen []candidate, flow string) []candidate {
 	sorted := false
 	if flow == catalog.FlowRising || flow == catalog.FlowFalling {
 		known := 0
@@ -543,27 +672,115 @@ func (g *generator) order(chosen []candidate, flow string) []song {
 		}
 	}
 	if !sorted {
-		g.rng.Shuffle(len(chosen), func(i, j int) { chosen[i], chosen[j] = chosen[j], chosen[i] })
+		g.chain(chosen)
 	}
-	songs := make([]song, len(chosen))
-	for i, c := range chosen {
-		songs[i] = c.s
+	spreadBy(len(chosen), func(i int) string { return artistKey(chosen[i].s) }, func(i, j int) {
+		chosen[i], chosen[j] = chosen[j], chosen[i]
+	})
+	return chosen
+}
+
+// chain orders songs greedily so that each song is similar to the previous one.
+// A small random term keeps the order different every day.
+func (g *generator) chain(c []candidate) {
+	if len(c) < 3 {
+		g.rng.Shuffle(len(c), func(i, j int) { c[i], c[j] = c[j], c[i] })
+		return
 	}
-	spreadArtists(songs)
-	return songs
+	start := g.rng.Intn(len(c))
+	c[0], c[start] = c[start], c[0]
+	for i := 1; i < len(c)-1; i++ {
+		best, bestDistance := i, math.Inf(1)
+		for j := i; j < len(c); j++ {
+			if d := transition(c[i-1], c[j]) + g.rng.Float64()*0.35; d < bestDistance {
+				best, bestDistance = j, d
+			}
+		}
+		c[i], c[best] = c[best], c[i]
+	}
+}
+
+// transition measures how different two neighbouring songs are (0 … maxTransition).
+func transition(a, b candidate) float64 {
+	d := 1.0
+sharedGenre:
+	for _, x := range a.genres {
+		for _, y := range b.genres {
+			if x == y {
+				d = 0
+				break sharedGenre
+			}
+		}
+	}
+	if a.s.Year > 0 && b.s.Year > 0 {
+		d += 0.6 * math.Min(math.Abs(float64(a.s.Year-b.s.Year))/15, 1)
+	} else {
+		d += 0.2
+	}
+	if a.energy >= 0 && b.energy >= 0 {
+		d += 0.8 * math.Abs(a.energy-b.energy)
+	} else {
+		d += 0.25
+	}
+	return d
+}
+
+// measureQuality calculates the quality metrics of an ordered playlist.
+func measureQuality(ordered []candidate, r catalog.Recipe, ctx songContext) playlistQuality {
+	q := playlistQuality{ExactGenre: -1}
+	n := len(ordered)
+	if n == 0 {
+		return q
+	}
+	artists := map[string]bool{}
+	exact, repeats, tagged := 0, 0, 0
+	for _, c := range ordered {
+		artists[artistKey(c.s)] = true
+		if len(r.Genres) > 0 && bestGenreMatch(songGenres(c.s), r.Genres) == exactGenre {
+			exact++
+		}
+		if age, ok := ctx.Recent[c.s.ID]; ok && age == 0 {
+			repeats++
+		}
+		if c.s.BPM > 0 || replayGain(c.s) != nil {
+			tagged++
+		}
+	}
+	if len(r.Genres) > 0 {
+		q.ExactGenre = float64(exact) / float64(n)
+	}
+	q.UniqueArtists = float64(len(artists)) / float64(n)
+	q.Repeats = float64(repeats) / float64(n)
+	q.Tagged = float64(tagged) / float64(n)
+	if n > 1 {
+		sum := 0.0
+		for i := 1; i < n; i++ {
+			sum += transition(ordered[i-1], ordered[i])
+		}
+		q.Coherence = 1 - sum/float64(n-1)/maxTransition
+	} else {
+		q.Coherence = 1
+	}
+	return q
 }
 
 // spreadArtists avoids the same artist twice in a row.
 func spreadArtists(songs []song) {
+	spreadBy(len(songs), func(i int) string { return artistKey(songs[i]) }, func(i, j int) {
+		songs[i], songs[j] = songs[j], songs[i]
+	})
+}
+
+func spreadBy(n int, artistOf func(int) string, swap func(i, j int)) {
 	const window = 8
-	for i := 1; i < len(songs); i++ {
-		prev := artistKey(songs[i-1])
-		if artistKey(songs[i]) != prev {
+	for i := 1; i < n; i++ {
+		prev := artistOf(i - 1)
+		if artistOf(i) != prev {
 			continue
 		}
-		for j := i + 1; j < len(songs) && j <= i+window; j++ {
-			if artistKey(songs[j]) != prev {
-				songs[i], songs[j] = songs[j], songs[i]
+		for j := i + 1; j < n && j <= i+window; j++ {
+			if artistOf(j) != prev {
+				swap(i, j)
 				break
 			}
 		}
@@ -595,6 +812,10 @@ func clamp01(v float64) float64 {
 	return math.Max(0, math.Min(1, v))
 }
 
+func percent(v float64) int {
+	return int(math.Round(v * 100))
+}
+
 // summary describes the selection for the log.
 func (st selectionStats) summary(chosen int) string {
 	var b strings.Builder
@@ -618,6 +839,9 @@ func (st selectionStats) summary(chosen int) string {
 		fmt.Fprintf(&b, " · not in library: %s", strings.Join(st.Missing, ", "))
 	}
 	fmt.Fprintf(&b, " · candidates: %d", st.Candidates)
+	if st.Added > 0 {
+		fmt.Fprintf(&b, " (incl. %d added by user)", st.Added)
+	}
 	if len(st.Rejected) > 0 {
 		keys := make([]string, 0, len(st.Rejected))
 		for k := range st.Rejected {
@@ -635,6 +859,20 @@ func (st selectionStats) summary(chosen int) string {
 	}
 	if chosen > 0 {
 		fmt.Fprintf(&b, " · metadata: %d with BPM, %d with ReplayGain, %d favorites", st.WithBPM, st.WithGain, st.Favorites)
+		q := st.Quality
+		b.WriteString(" · quality: ")
+		if q.ExactGenre >= 0 {
+			fmt.Fprintf(&b, "%d%% exact genre, ", percent(q.ExactGenre))
+		}
+		fmt.Fprintf(&b, "%d%% different artists, %d%% repeats, coherence %d%%", percent(q.UniqueArtists), percent(q.Repeats), percent(q.Coherence))
 	}
 	return b.String()
+}
+
+// explain describes why a song was chosen.
+func (d songDetail) explain() string {
+	s := d.Song
+	return fmt.Sprintf("%s – %s [%s] weight %.2f = genre %.2f × tempo/energy/mood %.2f × favorites/ratings %.2f × variety %.2f × edits %.2f",
+		s.Artist, s.Title, strings.Join(songGenres(s), ", "), d.Weight,
+		d.Parts.Genre, d.Parts.Tempo, d.Parts.Preference, d.Parts.Variety, d.Parts.Feedback)
 }

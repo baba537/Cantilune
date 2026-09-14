@@ -32,6 +32,33 @@ type Settings struct {
 	ExcludeGenres    []string
 	Situations       map[string]situationConfig
 	Custom           []customSituation
+
+	Audience       string
+	Language       string
+	Weights        Weights
+	LearnFromEdits bool
+	LogDetails     bool
+	DryRun         bool
+	ArchiveDays    int
+}
+
+// Weights scale the factor groups of the song weight in percent
+// (100 = default, 0 = ignore the group, 200 = twice as strong).
+type Weights struct {
+	Genre      int
+	Tempo      int
+	Preference int
+	Variety    int
+}
+
+// defaultWeights returns the neutral weights (100 % each).
+func defaultWeights() Weights {
+	return Weights{Genre: catalog.DefaultWeight, Tempo: catalog.DefaultWeight, Preference: catalog.DefaultWeight, Variety: catalog.DefaultWeight}
+}
+
+// Personal reports whether every permitted user gets a private playlist.
+func (s Settings) Personal() bool {
+	return s.Audience == catalog.AudiencePersonal
 }
 
 // situationConfig is the web UI row of a built-in situation.
@@ -66,13 +93,14 @@ type customSituation struct {
 // Job is a concrete playlist to generate.
 type Job struct {
 	ID          string // "gym" or "custom-<name>"
-	Title       string // "Gym"
+	Title       string // "Gym" (in the playlist language)
 	PresetLabel string // "Hardstyle ⚡" (empty for custom situations)
 	Name        string // full playlist name
 	Recipe      catalog.Recipe
 	Mode        string
 	Count       int
-	User        string
+	User        string // configured owner; resolved before generation
+	Public      bool
 	Fingerprint string
 }
 
@@ -150,6 +178,18 @@ func loadSettings(src configSource, cat *catalog.Catalog) Settings {
 		RemoveAll:        src.Bool(catalog.KeyRemoveAll, false),
 		ExcludeGenres:    catalog.DefaultExcludeGenres,
 		Situations:       map[string]situationConfig{},
+		Audience:         oneOf(src.String(catalog.KeyAudience, catalog.AudienceShared), catalog.Audiences),
+		Language:         oneOf(src.String(catalog.KeyLanguage, catalog.LanguageEnglish), catalog.Languages),
+		Weights: Weights{
+			Genre:      clamp(src.Int(catalog.KeyWeightGenre, catalog.DefaultWeight), 0, 200),
+			Tempo:      clamp(src.Int(catalog.KeyWeightTempo, catalog.DefaultWeight), 0, 200),
+			Preference: clamp(src.Int(catalog.KeyWeightPreference, catalog.DefaultWeight), 0, 200),
+			Variety:    clamp(src.Int(catalog.KeyWeightVariety, catalog.DefaultWeight), 0, 200),
+		},
+		LearnFromEdits: src.Bool(catalog.KeyLearnFromEdits, true),
+		LogDetails:     src.Bool(catalog.KeyLogDetails, false),
+		DryRun:         src.Bool(catalog.KeyDryRun, false),
+		ArchiveDays:    clamp(src.Int(catalog.KeyArchiveDays, 0), 0, 30),
 	}
 	if s.Prefix == "" {
 		s.Prefix = catalog.DefaultPrefix
@@ -183,19 +223,22 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 		if !ok && sc.Preset != "" {
 			logf(pdk.LogWarn, "%s: preset %q no longer exists, using %q", sit.Name, sc.Preset, sit.PresetLabel(preset))
 		}
+		title := sit.DisplayName(s.Language)
+		presetName := preset.DisplayName(s.Language)
 		variant := ""
 		if s.ShowPresetInName && !preset.Mix {
-			variant = preset.Name
+			variant = presetName
 		}
 		jobs = append(jobs, Job{
 			ID:          sit.ID,
-			Title:       sit.Name,
-			PresetLabel: sit.PresetLabel(preset),
-			Name:        buildPlaylistName(s.Prefix, sit.Name, variant, sit.PresetEmoji(preset)),
+			Title:       title,
+			PresetLabel: strings.TrimSpace(presetName + " " + sit.PresetEmoji(preset)),
+			Name:        buildPlaylistName(s.Prefix, title, variant, sit.PresetEmoji(preset)),
 			Recipe:      sit.Recipe(preset),
 			Mode:        normalizeMode(sc.Mode),
 			Count:       trackCount(sc.TrackCount, s.TrackCount),
 			User:        firstNonEmpty(sc.TargetUser, s.DefaultUser),
+			Public:      s.PublicPlaylists,
 		})
 	}
 
@@ -226,12 +269,27 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 				Flow:            labelValue(catalog.FlowLabels, c.Flow),
 				ExcludeExplicit: c.ExcludeExplicit,
 			},
-			Mode:  normalizeMode(c.Mode),
-			Count: trackCount(c.TrackCount, s.TrackCount),
-			User:  firstNonEmpty(c.TargetUser, s.DefaultUser),
+			Mode:   normalizeMode(c.Mode),
+			Count:  trackCount(c.TrackCount, s.TrackCount),
+			User:   firstNonEmpty(c.TargetUser, s.DefaultUser),
+			Public: s.PublicPlaylists,
 		})
 	}
 	return jobs
+}
+
+// personalJobs expands every job into one private playlist per user.
+func personalJobs(jobs []Job, users []string) []Job {
+	out := make([]Job, 0, len(jobs)*len(users))
+	for _, j := range jobs {
+		for _, u := range users {
+			pj := j
+			pj.User = u
+			pj.Public = false
+			out = append(out, pj)
+		}
+	}
+	return out
 }
 
 // buildPlaylistName builds names such as "🎧 Gym Hardstyle ⚡".
@@ -250,11 +308,13 @@ func fingerprint(j Job, s Settings) string {
 	data, _ := json.Marshal(struct {
 		Name, Mode, User string
 		Count            int
+		Public           bool
 		Recipe           catalog.Recipe
 		MaxPerArtist     int
 		SkipInterludes   bool
 		ExcludeGenres    []string
-	}{j.Name, j.Mode, strings.ToLower(j.User), j.Count, j.Recipe, s.MaxPerArtist, s.SkipInterludes, s.ExcludeGenres})
+		Weights          Weights
+	}{j.Name, j.Mode, strings.ToLower(j.User), j.Count, j.Public, j.Recipe, s.MaxPerArtist, s.SkipInterludes, s.ExcludeGenres, s.Weights})
 	h := fnv.New32a()
 	_, _ = h.Write(data)
 	return fmt.Sprintf("%08x", h.Sum32())
@@ -298,6 +358,16 @@ func labelValue(labels map[string]string, v string) string {
 		}
 	}
 	return ""
+}
+
+// oneOf returns v if it is one of the allowed values (case-insensitive), otherwise the first value.
+func oneOf(v string, allowed []string) string {
+	for _, a := range allowed {
+		if strings.EqualFold(strings.TrimSpace(v), a) {
+			return a
+		}
+	}
+	return allowed[0]
 }
 
 func trackCount(specific, def int) int {

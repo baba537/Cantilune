@@ -2,37 +2,9 @@ package catalog
 
 import "strings"
 
-// Settings saved by versions before 1.1.0 use German labels. These aliases
-// map them to the current English values so existing installations keep
-// their configuration.
-
-var legacyPresetNames = map[string]string{
-	"Elektro":              "Electronic",
-	"Elektronisch":         "Electronic",
-	"Weltmusik":            "World Music",
-	"Klassik":              "Classical",
-	"Akustik":              "Acoustic",
-	"Deutsch":              "German",
-	"80er & 90er":          "80s & 90s",
-	"Klassiker":            "Classics",
-	"Mitsingen":            "Sing-Along",
-	"Gute Laune":           "Good Mood",
-	"Sanft":                "Gentle",
-	"Pop-Hits":             "Pop Hits",
-	"2000er":               "2000s",
-	"Power-Balladen":       "Power Ballads",
-	"Neoklassik":           "Neoclassical",
-	"Klavier":              "Piano",
-	"Naturklänge":          "Nature Sounds",
-	"Melancholie":          "Melancholy",
-	"90er":                 "90s",
-	"Schlager & Partyhits": "Schlager & Party Hits",
-	"Balladen":             "Ballads",
-	"Kinderlieder":         "Kids Songs",
-	"Gute-Laune-Pop":       "Feel-Good Pop",
-	"Episch":               "Epic",
-}
-
+// Settings saved by versions before 1.1.0 use German labels. Preset names are
+// resolved through the nameDe fields in presets.json; the remaining dropdown
+// values are mapped here so existing installations keep their configuration.
 var legacyLabels = map[string]string{
 	// selection modes
 	"ausgewogen":      ModeBalanced,
@@ -50,6 +22,14 @@ var legacyLabels = map[string]string{
 	"abklingend": "falling",
 }
 
+// germanModes translates selection modes for German playlist comments.
+var germanModes = map[string]string{
+	ModeBalanced:      "Ausgewogen",
+	ModeFavorites:     "Lieblingssongs",
+	ModeDiscover:      "Entdecken",
+	ModeRecentlyAdded: "Neu hinzugefügt",
+}
+
 // Canonical maps a German label from an earlier version to its English value.
 // Other values are returned unchanged.
 func Canonical(label string) string {
@@ -57,4 +37,14 @@ func Canonical(label string) string {
 		return en
 	}
 	return label
+}
+
+// ModeName returns a selection mode in the given playlist language.
+func ModeName(mode, language string) string {
+	if language == LanguageGerman {
+		if de, ok := germanModes[mode]; ok {
+			return de
+		}
+	}
+	return mode
 }

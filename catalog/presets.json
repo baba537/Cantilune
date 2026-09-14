@@ -21,7 +21,7 @@
       ]
     },
     {
-      "id": "laufen", "name": "Running", "emoji": "🏃", "category": "sport", "enabled": false,
+      "id": "laufen", "name": "Running", "nameDe": "Laufen", "emoji": "🏃", "category": "sport", "enabled": false,
       "defaults": { "energy": "high", "flow": "rising", "minDuration": 90, "maxDuration": 480, "minBpm": 150, "maxBpm": 180 },
       "presets": [
         { "name": "Mix", "mix": true },
@@ -32,12 +32,12 @@
       ]
     },
     {
-      "id": "radfahren", "name": "Cycling", "emoji": "🚴", "category": "sport", "enabled": false,
+      "id": "radfahren", "name": "Cycling", "nameDe": "Radfahren", "emoji": "🚴", "category": "sport", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle", "minDuration": 90, "maxDuration": 540 },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Indie", "emoji": "🌿", "genres": ["Indie", "Indie Pop", "Indie Rock", "Alternative"] },
-        { "name": "Electronic", "emoji": "🎧", "genres": ["Electronic", "House", "Nu Disco", "Synthpop"] },
+        { "name": "Electronic", "nameDe": "Elektro", "emoji": "🎧", "genres": ["Electronic", "House", "Nu Disco", "Synthpop"] },
         { "name": "Rock", "emoji": "🎸", "genres": ["Rock", "Classic Rock", "Pop Rock"] }
       ]
     },
@@ -46,55 +46,55 @@
       "defaults": { "energy": "low", "flow": "falling", "maxBpm": 100, "minDuration": 120, "maxDuration": 1200 },
       "presets": [
         { "name": "Ambient", "emoji": "🌌", "genres": ["Ambient", "New Age", "Drone", "Meditation"] },
-        { "name": "World Music", "emoji": "🌍", "genres": ["World", "Indian", "Celtic", "Folk"] },
+        { "name": "World Music", "nameDe": "Weltmusik", "emoji": "🌍", "genres": ["World", "Indian", "Celtic", "Folk"] },
         { "name": "Downtempo", "emoji": "🌙", "genres": ["Downtempo", "Chillout", "Trip Hop", "Lounge"] },
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Neoclassical", "Piano"] }
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Neoclassical", "Piano"] }
       ]
     },
     {
-      "id": "wandern", "name": "Walking & Hiking", "emoji": "🥾", "category": "sport", "enabled": false,
+      "id": "wandern", "name": "Walking & Hiking", "nameDe": "Spazieren & Wandern", "emoji": "🥾", "category": "sport", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Folk", "emoji": "🪕", "genres": ["Folk", "Indie Folk", "Singer-Songwriter", "Americana", "Country"] },
         { "name": "Indie", "emoji": "🌿", "genres": ["Indie", "Indie Pop", "Indie Rock"] },
-        { "name": "Acoustic", "emoji": "🎸", "genres": ["Acoustic", "Singer-Songwriter"] }
+        { "name": "Acoustic", "nameDe": "Akustik", "emoji": "🎸", "genres": ["Acoustic", "Singer-Songwriter"] }
       ]
     },
     {
-      "id": "autoFahren", "name": "Driving", "emoji": "🚗", "category": "unterwegs", "enabled": true,
+      "id": "autoFahren", "name": "Driving", "nameDe": "Auto fahren", "emoji": "🚗", "category": "unterwegs", "enabled": true,
       "defaults": { "energy": "medium", "flow": "shuffle", "maxDuration": 540 },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Rock", "emoji": "🎸", "genres": ["Rock", "Classic Rock", "Pop Rock", "Hard Rock", "Alternative"] },
         { "name": "Pop", "emoji": "🎶", "genres": ["Pop", "Dance Pop", "Synthpop"] },
         { "name": "HipHop", "emoji": "🎤", "genres": ["Hip-Hop", "Rap", "Deutschrap", "R&B"] },
-        { "name": "German", "emoji": "🇩🇪", "genres": ["Deutschpop", "Deutschrap", "Deutschrock", "Neue Deutsche Welle", "Schlager", "German"] },
-        { "name": "80s & 90s", "emoji": "📼", "fromYear": 1980, "toYear": 1999 }
+        { "name": "German", "nameDe": "Deutsch", "emoji": "🇩🇪", "genres": ["Deutschpop", "Deutschrap", "Deutschrock", "Neue Deutsche Welle", "Schlager", "German"] },
+        { "name": "80s & 90s", "nameDe": "80er & 90er", "emoji": "📼", "fromYear": 1980, "toYear": 1999 }
       ]
     },
     {
-      "id": "roadtrip", "name": "Road Trip", "emoji": "🛣️", "category": "unterwegs", "enabled": false,
+      "id": "roadtrip", "name": "Road Trip", "nameDe": "Roadtrip", "emoji": "🛣️", "category": "unterwegs", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle", "maxDuration": 600 },
       "presets": [
-        { "name": "Classics", "emoji": "🎸", "genres": ["Classic Rock", "Rock", "Soft Rock", "Country Rock"], "toYear": 1999 },
-        { "name": "Sing-Along", "emoji": "🎤", "genres": ["Pop", "Pop Rock", "Dance Pop"] },
+        { "name": "Classics", "nameDe": "Klassiker", "emoji": "🎸", "genres": ["Classic Rock", "Rock", "Soft Rock", "Country Rock"], "toYear": 1999 },
+        { "name": "Sing-Along", "nameDe": "Mitsingen", "emoji": "🎤", "genres": ["Pop", "Pop Rock", "Dance Pop"] },
         { "name": "Indie", "emoji": "🌿", "genres": ["Indie", "Indie Rock", "Indie Pop", "Alternative"] },
         { "name": "Country", "emoji": "🤠", "genres": ["Country", "Americana", "Southern Rock", "Bluegrass"] }
       ]
     },
     {
-      "id": "pendeln", "name": "Commute", "emoji": "🚆", "category": "unterwegs", "enabled": false,
+      "id": "pendeln", "name": "Commute", "nameDe": "Bus & Bahn", "emoji": "🚆", "category": "unterwegs", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Lo-Fi", "emoji": "☕", "genres": ["Lo-Fi", "Chillhop", "Jazz Hop", "Downtempo"] },
         { "name": "Indie", "emoji": "🌿", "genres": ["Indie", "Indie Pop", "Alternative"] },
-        { "name": "Electronic", "emoji": "🎧", "genres": ["Electronic", "Synthpop", "Deep House"] }
+        { "name": "Electronic", "nameDe": "Elektro", "emoji": "🎧", "genres": ["Electronic", "Synthpop", "Deep House"] }
       ]
     },
     {
-      "id": "nachtfahrt", "name": "Night Drive", "emoji": "🌃", "category": "unterwegs", "enabled": false,
+      "id": "nachtfahrt", "name": "Night Drive", "nameDe": "Nachtfahrt", "emoji": "🌃", "category": "unterwegs", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Synthwave", "emoji": "🌆", "genres": ["Synthwave", "Retrowave", "Darksynth", "Outrun", "Synthpop"] },
@@ -103,7 +103,7 @@
       ]
     },
     {
-      "id": "kochen", "name": "Cooking", "emoji": "🍳", "category": "zuhause", "enabled": true,
+      "id": "kochen", "name": "Cooking", "nameDe": "Kochen", "emoji": "🍳", "category": "zuhause", "enabled": true,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
@@ -114,56 +114,56 @@
       ]
     },
     {
-      "id": "essen", "name": "Mealtime", "emoji": "🍽️", "category": "zuhause", "enabled": true,
+      "id": "essen", "name": "Mealtime", "nameDe": "Essen", "emoji": "🍽️", "category": "zuhause", "enabled": true,
       "defaults": { "energy": "low", "flow": "shuffle", "maxBpm": 115 },
       "presets": [
         { "name": "Jazz", "emoji": "🎷", "genres": ["Jazz", "Smooth Jazz", "Vocal Jazz", "Swing"] },
         { "name": "Bossa & Lounge", "emoji": "🍸", "genres": ["Bossa Nova", "Lounge", "Chillout"] },
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Baroque", "Piano", "Chamber Music"] },
-        { "name": "Acoustic", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Folk"] }
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Baroque", "Piano", "Chamber Music"] },
+        { "name": "Acoustic", "nameDe": "Akustik", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Folk"] }
       ]
     },
     {
-      "id": "fruehstueck", "name": "Breakfast", "emoji": "☕", "category": "zuhause", "enabled": false,
+      "id": "fruehstueck", "name": "Breakfast", "nameDe": "Frühstück", "emoji": "☕", "category": "zuhause", "enabled": false,
       "defaults": { "energy": "low", "flow": "rising" },
       "presets": [
-        { "name": "Acoustic", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Folk"] },
+        { "name": "Acoustic", "nameDe": "Akustik", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Folk"] },
         { "name": "Soul", "emoji": "☀️", "genres": ["Soul", "Motown", "Neo Soul", "R&B"] },
         { "name": "Indie Pop", "emoji": "🌿", "genres": ["Indie Pop", "Indie Folk"] },
         { "name": "Jazz", "emoji": "🎷", "genres": ["Jazz", "Vocal Jazz", "Bossa Nova"] }
       ]
     },
     {
-      "id": "aufwachen", "name": "Waking Up", "emoji": "🌅", "category": "zuhause", "enabled": false,
+      "id": "aufwachen", "name": "Waking Up", "nameDe": "Aufwachen", "emoji": "🌅", "category": "zuhause", "enabled": false,
       "defaults": { "flow": "rising" },
       "presets": [
-        { "name": "Good Mood", "emoji": "☀️", "genres": ["Pop", "Funk", "Soul", "Reggae", "Indie Pop"], "energy": "medium" },
-        { "name": "Gentle", "emoji": "🌤️", "genres": ["Acoustic", "Folk", "Singer-Songwriter", "Ambient"], "energy": "low" },
+        { "name": "Good Mood", "nameDe": "Gute Laune", "emoji": "☀️", "genres": ["Pop", "Funk", "Soul", "Reggae", "Indie Pop"], "energy": "medium" },
+        { "name": "Gentle", "nameDe": "Sanft", "emoji": "🌤️", "genres": ["Acoustic", "Folk", "Singer-Songwriter", "Ambient"], "energy": "low" },
         { "name": "Power", "emoji": "⚡", "genres": ["Dance", "Pop", "Rock", "EDM"], "energy": "high" }
       ]
     },
     {
-      "id": "putzen", "name": "Cleaning", "emoji": "🧹", "category": "zuhause", "enabled": true,
+      "id": "putzen", "name": "Cleaning", "nameDe": "Putzen", "emoji": "🧹", "category": "zuhause", "enabled": true,
       "defaults": { "energy": "high", "flow": "shuffle", "maxDuration": 420 },
       "presets": [
         { "name": "Mix", "mix": true },
-        { "name": "Pop Hits", "emoji": "🎶", "genres": ["Pop", "Dance Pop", "Dance"] },
+        { "name": "Pop Hits", "nameDe": "Pop-Hits", "emoji": "🎶", "genres": ["Pop", "Dance Pop", "Dance"] },
         { "name": "Disco & Funk", "emoji": "🕺", "genres": ["Disco", "Funk", "Nu Disco"] },
         { "name": "Rock", "emoji": "🎸", "genres": ["Rock", "Pop Rock", "Punk"] },
-        { "name": "2000s", "emoji": "💿", "fromYear": 2000, "toYear": 2012 }
+        { "name": "2000s", "nameDe": "2000er", "emoji": "💿", "fromYear": 2000, "toYear": 2012 }
       ]
     },
     {
-      "id": "duschen", "name": "Shower", "emoji": "🚿", "category": "zuhause", "enabled": false,
+      "id": "duschen", "name": "Shower", "nameDe": "Duschen", "emoji": "🚿", "category": "zuhause", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle", "maxDuration": 360 },
       "presets": [
-        { "name": "Sing-Along", "emoji": "🎤", "genres": ["Pop", "Pop Rock", "Dance Pop"] },
-        { "name": "Power Ballads", "emoji": "🎸", "genres": ["Soft Rock", "Power Pop", "Ballad", "Pop Rock"] },
-        { "name": "German", "emoji": "🇩🇪", "genres": ["Deutschpop", "Schlager", "Neue Deutsche Welle"] }
+        { "name": "Sing-Along", "nameDe": "Mitsingen", "emoji": "🎤", "genres": ["Pop", "Pop Rock", "Dance Pop"] },
+        { "name": "Power Ballads", "nameDe": "Power-Balladen", "emoji": "🎸", "genres": ["Soft Rock", "Power Pop", "Ballad", "Pop Rock"] },
+        { "name": "German", "nameDe": "Deutsch", "emoji": "🇩🇪", "genres": ["Deutschpop", "Schlager", "Neue Deutsche Welle"] }
       ]
     },
     {
-      "id": "garten", "name": "Garden & DIY", "emoji": "🔨", "category": "zuhause", "enabled": false,
+      "id": "garten", "name": "Garden & DIY", "nameDe": "Garten & Heimwerken", "emoji": "🔨", "category": "zuhause", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
@@ -178,44 +178,44 @@
       "presets": [
         { "name": "Soundtrack", "emoji": "🎬", "genres": ["Soundtrack", "Video Game", "Game", "Score", "OST"], "energy": "medium" },
         { "name": "Synthwave", "emoji": "🌆", "genres": ["Synthwave", "Retrowave", "Darksynth", "Chiptune"] },
-        { "name": "Electronic", "emoji": "🎧", "genres": ["Electronic", "Dubstep", "Drum and Bass", "Trance"] },
+        { "name": "Electronic", "nameDe": "Elektro", "emoji": "🎧", "genres": ["Electronic", "Dubstep", "Drum and Bass", "Trance"] },
         { "name": "Metal", "emoji": "🤘", "genres": ["Metal", "Metalcore", "Djent"] }
       ]
     },
     {
-      "id": "lesen", "name": "Reading", "emoji": "📖", "category": "zuhause", "enabled": false,
+      "id": "lesen", "name": "Reading", "nameDe": "Lesen", "emoji": "📖", "category": "zuhause", "enabled": false,
       "defaults": { "energy": "low", "flow": "shuffle", "maxDuration": 1200 },
       "presets": [
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Baroque", "Chamber Music"] },
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Baroque", "Chamber Music"] },
         { "name": "Ambient", "emoji": "🌌", "genres": ["Ambient", "Drone"] },
         { "name": "Jazz", "emoji": "🎷", "genres": ["Jazz", "Cool Jazz", "Piano Jazz"] },
-        { "name": "Neoclassical", "emoji": "🎹", "genres": ["Neoclassical", "Modern Classical", "Piano", "Minimalism"] }
+        { "name": "Neoclassical", "nameDe": "Neoklassik", "emoji": "🎹", "genres": ["Neoclassical", "Modern Classical", "Piano", "Minimalism"] }
       ]
     },
     {
-      "id": "lernen", "name": "Studying", "emoji": "📚", "category": "konzentration", "enabled": true,
+      "id": "lernen", "name": "Studying", "nameDe": "Lernen", "emoji": "📚", "category": "konzentration", "enabled": true,
       "defaults": { "energy": "low", "flow": "shuffle", "maxBpm": 110, "maxDuration": 900 },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Lo-Fi", "emoji": "☕", "genres": ["Lo-Fi", "Chillhop", "Jazz Hop"] },
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Baroque", "Piano"] },
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Baroque", "Piano"] },
         { "name": "Ambient", "emoji": "🌌", "genres": ["Ambient", "Drone", "New Age"] },
         { "name": "Soundtrack", "emoji": "🎬", "genres": ["Soundtrack", "Score", "Film Score"] }
       ]
     },
     {
-      "id": "fokus", "name": "Work & Focus", "emoji": "🎯", "category": "konzentration", "enabled": true,
+      "id": "fokus", "name": "Work & Focus", "nameDe": "Arbeiten & Fokus", "emoji": "🎯", "category": "konzentration", "enabled": true,
       "defaults": { "energy": "medium", "flow": "shuffle", "maxDuration": 900 },
       "presets": [
         { "name": "Mix", "mix": true },
-        { "name": "Electronic", "emoji": "🎧", "genres": ["Electronic", "IDM", "Minimal", "Deep House", "Downtempo"] },
+        { "name": "Electronic", "nameDe": "Elektronisch", "emoji": "🎧", "genres": ["Electronic", "IDM", "Minimal", "Deep House", "Downtempo"] },
         { "name": "Post-Rock", "emoji": "🌊", "genres": ["Post-Rock", "Instrumental", "Math Rock"] },
         { "name": "Lo-Fi", "emoji": "☕", "genres": ["Lo-Fi", "Chillhop", "Jazz Hop"] },
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Neoclassical", "Piano"] }
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Neoclassical", "Piano"] }
       ]
     },
     {
-      "id": "kreativ", "name": "Creative", "emoji": "🎨", "category": "konzentration", "enabled": false,
+      "id": "kreativ", "name": "Creative", "nameDe": "Kreativ", "emoji": "🎨", "category": "konzentration", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
@@ -225,31 +225,31 @@
       ]
     },
     {
-      "id": "entspannen", "name": "Relax", "emoji": "🛋️", "category": "entspannung", "enabled": true,
+      "id": "entspannen", "name": "Relax", "nameDe": "Entspannen", "emoji": "🛋️", "category": "entspannung", "enabled": true,
       "defaults": { "energy": "low", "flow": "shuffle", "maxBpm": 115 },
       "presets": [
         { "name": "Mix", "mix": true },
         { "name": "Chillout", "emoji": "🌴", "genres": ["Chillout", "Lounge", "Downtempo", "Chillhop"] },
-        { "name": "Acoustic", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Indie Folk"] },
+        { "name": "Acoustic", "nameDe": "Akustik", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter", "Indie Folk"] },
         { "name": "Reggae", "emoji": "🌴", "genres": ["Reggae", "Dub", "Roots Reggae"] },
         { "name": "Soul", "emoji": "🎙️", "genres": ["Soul", "R&B", "Neo Soul"] }
       ]
     },
     {
-      "id": "schlafen", "name": "Sleep", "emoji": "😴", "category": "entspannung", "enabled": true,
+      "id": "schlafen", "name": "Sleep", "nameDe": "Schlafen", "emoji": "😴", "category": "entspannung", "enabled": true,
       "defaults": { "energy": "low", "flow": "falling", "maxBpm": 90, "maxDuration": 1800, "excludeExplicit": true },
       "presets": [
         { "name": "Ambient", "emoji": "🌌", "genres": ["Ambient", "Drone", "New Age", "Dark Ambient"] },
-        { "name": "Piano", "emoji": "🎹", "genres": ["Piano", "Neoclassical", "Modern Classical"] },
-        { "name": "Classical", "emoji": "🎻", "genres": ["Classical", "Baroque", "Romantic"] },
-        { "name": "Nature Sounds", "emoji": "🌧️", "genres": ["Nature Sounds", "Sleep", "Meditation", "Relaxation", "White Noise"] }
+        { "name": "Piano", "nameDe": "Klavier", "emoji": "🎹", "genres": ["Piano", "Neoclassical", "Modern Classical"] },
+        { "name": "Classical", "nameDe": "Klassik", "emoji": "🎻", "genres": ["Classical", "Baroque", "Romantic"] },
+        { "name": "Nature Sounds", "nameDe": "Naturklänge", "emoji": "🌧️", "genres": ["Nature Sounds", "Sleep", "Meditation", "Relaxation", "White Noise"] }
       ]
     },
     {
-      "id": "regentag", "name": "Rainy Day", "emoji": "🌧️", "category": "entspannung", "enabled": false,
+      "id": "regentag", "name": "Rainy Day", "nameDe": "Regentag", "emoji": "🌧️", "category": "entspannung", "enabled": false,
       "defaults": { "energy": "low", "flow": "shuffle" },
       "presets": [
-        { "name": "Melancholy", "emoji": "🌧️", "genres": ["Singer-Songwriter", "Indie Folk", "Slowcore", "Sadcore", "Ballad"] },
+        { "name": "Melancholy", "nameDe": "Melancholie", "emoji": "🌧️", "genres": ["Singer-Songwriter", "Indie Folk", "Slowcore", "Sadcore", "Ballad"] },
         { "name": "Jazz", "emoji": "🎷", "genres": ["Jazz", "Cool Jazz", "Vocal Jazz"] },
         { "name": "Trip-Hop", "emoji": "🌀", "genres": ["Trip Hop", "Downtempo"] }
       ]
@@ -261,13 +261,13 @@
         { "name": "Mix", "mix": true },
         { "name": "Dance & EDM", "emoji": "🔥", "genres": ["Dance", "EDM", "House", "Electro House", "Big Room"] },
         { "name": "HipHop & R&B", "emoji": "🎤", "genres": ["Hip-Hop", "Rap", "R&B", "Trap", "Afrobeats"] },
-        { "name": "2000s", "emoji": "💿", "fromYear": 2000, "toYear": 2012 },
-        { "name": "90s", "emoji": "📼", "fromYear": 1990, "toYear": 1999 },
-        { "name": "Schlager & Party Hits", "emoji": "🍻", "genres": ["Schlager", "Party", "Discofox", "Après-Ski", "Ballermann"] }
+        { "name": "2000s", "nameDe": "2000er", "emoji": "💿", "fromYear": 2000, "toYear": 2012 },
+        { "name": "90s", "nameDe": "90er", "emoji": "📼", "fromYear": 1990, "toYear": 1999 },
+        { "name": "Schlager & Party Hits", "nameDe": "Schlager & Partyhits", "emoji": "🍻", "genres": ["Schlager", "Party", "Discofox", "Après-Ski", "Ballermann"] }
       ]
     },
     {
-      "id": "dinner", "name": "Dinner Party", "emoji": "🥂", "category": "gesellschaft", "enabled": false,
+      "id": "dinner", "name": "Dinner Party", "nameDe": "Dinner mit Gästen", "emoji": "🥂", "category": "gesellschaft", "enabled": false,
       "defaults": { "energy": "low", "flow": "shuffle", "excludeExplicit": true },
       "presets": [
         { "name": "Jazz", "emoji": "🎷", "genres": ["Jazz", "Vocal Jazz", "Swing"] },
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "id": "grillen", "name": "BBQ & Summer", "emoji": "☀️", "category": "gesellschaft", "enabled": false,
+      "id": "grillen", "name": "BBQ & Summer", "nameDe": "Grillen & Sommer", "emoji": "☀️", "category": "gesellschaft", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle" },
       "presets": [
         { "name": "Mix", "mix": true },
@@ -288,29 +288,29 @@
       ]
     },
     {
-      "id": "romantik", "name": "Date Night", "emoji": "🌹", "category": "gesellschaft", "enabled": false,
+      "id": "romantik", "name": "Date Night", "nameDe": "Date & Romantik", "emoji": "🌹", "category": "gesellschaft", "enabled": false,
       "defaults": { "energy": "low", "flow": "shuffle" },
       "presets": [
         { "name": "Soul & R&B", "emoji": "🎙️", "genres": ["R&B", "Soul", "Neo Soul", "Slow Jam"] },
         { "name": "Jazz", "emoji": "🎷", "genres": ["Vocal Jazz", "Jazz", "Smooth Jazz"] },
-        { "name": "Acoustic", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter"] },
-        { "name": "Ballads", "emoji": "💕", "genres": ["Ballad", "Soft Rock", "Pop"] }
+        { "name": "Acoustic", "nameDe": "Akustik", "emoji": "🪕", "genres": ["Acoustic", "Singer-Songwriter"] },
+        { "name": "Ballads", "nameDe": "Balladen", "emoji": "💕", "genres": ["Ballad", "Soft Rock", "Pop"] }
       ]
     },
     {
-      "id": "kinder", "name": "With Kids", "emoji": "🧸", "category": "gesellschaft", "enabled": false,
+      "id": "kinder", "name": "With Kids", "nameDe": "Mit Kindern", "emoji": "🧸", "category": "gesellschaft", "enabled": false,
       "defaults": { "energy": "medium", "flow": "shuffle", "excludeExplicit": true, "maxDuration": 360 },
       "presets": [
-        { "name": "Kids Songs", "emoji": "🧸", "genres": ["Kinderlieder", "Children's Music", "Kids", "Children"] },
+        { "name": "Kids Songs", "nameDe": "Kinderlieder", "emoji": "🧸", "genres": ["Kinderlieder", "Children's Music", "Kids", "Children"] },
         { "name": "Film & Musical", "emoji": "🎬", "genres": ["Soundtrack", "Disney", "Musical"] },
-        { "name": "Feel-Good Pop", "emoji": "🎶", "genres": ["Pop", "Dance Pop"] }
+        { "name": "Feel-Good Pop", "nameDe": "Gute-Laune-Pop", "emoji": "🎶", "genres": ["Pop", "Dance Pop"] }
       ]
     },
     {
       "id": "motivation", "name": "Motivation", "emoji": "🚀", "category": "gesellschaft", "enabled": false,
       "defaults": { "energy": "high", "flow": "rising" },
       "presets": [
-        { "name": "Epic", "emoji": "🎬", "genres": ["Soundtrack", "Epic", "Orchestral", "Trailer Music", "Score"] },
+        { "name": "Epic", "nameDe": "Episch", "emoji": "🎬", "genres": ["Soundtrack", "Epic", "Orchestral", "Trailer Music", "Score"] },
         { "name": "Rock", "emoji": "🎸", "genres": ["Rock", "Hard Rock", "Alternative Rock"] },
         { "name": "HipHop", "emoji": "🎤", "genres": ["Hip-Hop", "Rap"] },
         { "name": "Pop", "emoji": "🎶", "genres": ["Pop", "Dance Pop"] }
