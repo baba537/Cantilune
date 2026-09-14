@@ -4,35 +4,100 @@ on:
   push:
     branches: ["**"]
   pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  TINYGO_VERSION: "0.42.0"
+  BINARYEN_VERSION: "132"
+  GOLANGCI_LINT_VERSION: "v2.13.2"
 
 jobs:
-  build:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+      - name: golangci-lint (WebAssembly target)
+        uses: golangci/golangci-lint-action@v8
+        env:
+          GOOS: wasip1
+          GOARCH: wasm
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
 
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: go.mod and go.sum are tidy
+        run: go mod tidy -diff
+      - name: manifest.json matches catalog/presets.json
+        run: go generate ./... && git diff --exit-code manifest.json
+      - name: Unit and integration tests (race detector)
+        run: go test -race ./...
+      - name: Fuzzing (15 s per target)
+        run: make fuzz
+      - name: Load profile (100,000 songs, 10 users)
+        run: CANTILUNE_LOAD=1 go test -run TestLoadProfile -v . | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Known vulnerabilities (govulncheck)
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+
+  build:
+    name: Build (reproducible)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - uses: acifani/setup-tinygo@v2
         with:
-          tinygo-version: "0.42.0"
-
-      - name: Resolve dependencies
-        run: go mod tidy
-
-      - name: Check manifest
-        run: jq -e '.name and .author and .version and .config.schema' manifest.json > /dev/null
-
-      - name: Tests
-        run: go test ./...
-
-      - name: Build package
-        run: make package VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
-
+          tinygo-version: ${{ env.TINYGO_VERSION }}
+          binaryen-version: ${{ env.BINARYEN_VERSION }}
+      - name: Build twice from a clean cache and compare
+        run: |
+          make checksums VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
+          cp dist/SHA256SUMS first.sha256
+          make clean && tinygo clean
+          make checksums VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
+          diff first.sha256 dist/SHA256SUMS
+          { echo '### Reproducible build'; echo '```'; cat dist/SHA256SUMS; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
           name: cantilune-ndp
-          path: dist/cantilune.ndp
+          path: |
+            dist/cantilune.ndp
+            dist/SHA256SUMS
+
+  e2e:
+    name: E2E Navidrome ${{ matrix.navidrome }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        navidrome: ["0.62.0", "0.63.2", "0.64.0"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: cantilune-ndp
+          path: dist
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Run end-to-end test
+        run: bash scripts/e2e.sh "${{ matrix.navidrome }}" dist/cantilune.ndp

@@ -5,34 +5,54 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
   release:
+    name: Publish release
+    needs: ci
     runs-on: ubuntu-latest
+    permissions:
+      contents: write     # create the release
+      id-token: write     # sign the build provenance attestation
+      attestations: write # store the attestation
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-          cache: false
 
       - uses: acifani/setup-tinygo@v2
         with:
           tinygo-version: "0.42.0"
+          binaryen-version: "132"
 
-      - name: Resolve dependencies
-        run: go mod tidy
-
-      - name: Tests
-        run: go test ./...
-
-      - name: Build package
-        run: make package VERSION="${GITHUB_REF_NAME#v}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
+      - name: Build package and checksums
+        run: make checksums VERSION="${GITHUB_REF_NAME#v}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
 
       - name: Show package contents
         run: unzip -l dist/cantilune.ndp && jq '{name, version, website}' dist/manifest.json
+
+      - name: Software bill of materials (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/cantilune.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Build provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/cantilune.ndp
+            dist/plugin.wasm
 
       - name: Release notes from changelog
         run: |
@@ -41,12 +61,15 @@ jobs:
           if [ ! -s dist/release-notes.md ]; then
             echo "No changelog entries for $version." > dist/release-notes.md
           fi
-          printf '\n---\n\n**Installation:** download `cantilune.ndp` and copy it into the Navidrome plugin folder. See the [README](%s/%s#installation) for details.\n' \
-            "${{ github.server_url }}" "${{ github.repository }}" >> dist/release-notes.md
+          printf '\n---\n\n**Installation:** download `cantilune.ndp` and copy it into the Navidrome plugin folder. See the [README](%s/%s#installation) for details.\n\n**Verification:** `sha256sum -c SHA256SUMS --ignore-missing` and `gh attestation verify cantilune.ndp -R %s`. See [SECURITY.md](%s/%s/blob/main/SECURITY.md#verifying-a-release).\n' \
+            "${{ github.server_url }}" "${{ github.repository }}" "${{ github.repository }}" "${{ github.server_url }}" "${{ github.repository }}" >> dist/release-notes.md
           cat dist/release-notes.md
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/cantilune.ndp
+          files: |
+            dist/cantilune.ndp
+            dist/SHA256SUMS
+            dist/cantilune.spdx.json
           body_path: dist/release-notes.md

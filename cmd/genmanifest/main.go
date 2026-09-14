@@ -16,7 +16,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "genmanifest:", err)
 		os.Exit(1)
 	}
-	if err := os.WriteFile("manifest.json", data, 0o644); err != nil {
+	if err := os.WriteFile("manifest.json", data, 0o644); err != nil { //nolint:gosec // manifest.json is a public source file of the repository
+
 		fmt.Fprintln(os.Stderr, "genmanifest:", err)
 		os.Exit(1)
 	}
