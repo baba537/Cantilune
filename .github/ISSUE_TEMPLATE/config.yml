@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Security vulnerability
+    url: https://github.com/baba537/Cantilune/security/advisories/new
+    about: Please report security problems privately, see SECURITY.md
   - name: Navidrome documentation
     url: https://www.navidrome.org/docs/
     about: General questions about Navidrome and plugin configuration

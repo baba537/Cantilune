@@ -2,6 +2,31 @@
 
 All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] – 2026-09-15
+
+### Added
+- *Playlists for*: one shared playlist per situation, or a private playlist for every permitted user based on that user's own favorites and listening history. Stored data is kept separately per user.
+- *Learn from playlist edits*: songs removed from a Cantilune playlist are avoided for 60 days, songs added are preferred.
+- *Log why each song was chosen*: one log line per song with its weight and factor groups.
+- *Preview only*: runs the selection and logs the result without changing playlists.
+- Adjustable weights for genre fit, tempo/energy/mood, favorites/ratings and variety.
+- *Archive*: replaced playlists can be kept as private, dated copies for up to 30 days.
+- *Playlist language*: situation and preset names in English or German.
+- Quality metrics in the log: exact genre share, artist variety, repeats and coherence.
+- Security policy with threat model and permission overview, contribution guidelines, code of conduct.
+- Documentation of the algorithm, performance measurements and test strategy in `docs/`.
+- Releases include `SHA256SUMS`, an SPDX SBOM and a signed build provenance attestation; the build is reproducible.
+- CI: golangci-lint, CodeQL, govulncheck, fuzzing, a load profile with 100,000 songs and end-to-end tests against Navidrome 0.63.2 and 0.64.0. Dependabot keeps dependencies and actions up to date.
+
+### Changed
+- Songs follow each other by similarity in genre, year and energy instead of pure random order when a playlist has no rising or falling flow.
+- Every candidate's genre tags are verified, because Navidrome filters genres with SQL `LIKE`.
+- At most 40 genre queries per playlist.
+- Releases are built with the latest Go 1.26 patch release instead of Go 1.25.0.
+
+### Fixed
+- Genre normalization created a string replacer on every comparison; generating a playlist from 100,000 songs is now about nine times faster and allocates about 40 times less memory.
+
 ## [1.2.0] – 2026-09-14
 
 ### Fixed
@@ -40,6 +65,7 @@ First public release.
 - Schedule by time of day or cron expression, with immediate update after saving
 - Option to delete all generated playlists before uninstalling
 
+[1.3.0]: https://github.com/baba537/Cantilune/releases/tag/v1.3.0
 [1.2.0]: https://github.com/baba537/Cantilune/releases/tag/v1.2.0
 [1.1.0]: https://github.com/baba537/Cantilune/releases/tag/v1.1.0
 [1.0.0]: https://github.com/baba537/Cantilune/releases/tag/v1.0.0
