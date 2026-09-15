@@ -19,16 +19,16 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
       - name: golangci-lint (WebAssembly target)
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         env:
           GOOS: wasip1
           GOARCH: wasm
@@ -39,8 +39,8 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
       - name: go.mod and go.sum are tidy
@@ -64,11 +64,11 @@ jobs:
     name: Build (reproducible)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
-      - uses: acifani/setup-tinygo@v2
+      - uses: acifani/setup-tinygo@v3
         with:
           tinygo-version: ${{ env.TINYGO_VERSION }}
           binaryen-version: ${{ env.BINARYEN_VERSION }}
@@ -81,7 +81,7 @@ jobs:
           diff first.sha256 dist/SHA256SUMS
           { echo '### Reproducible build'; echo '```'; cat dist/SHA256SUMS; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           echo "::notice title=Reproducible build ($(go version | cut -d' ' -f3), TinyGo ${TINYGO_VERSION})::$(paste -sd ';' dist/SHA256SUMS)"
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: cantilune-ndp
           path: |
@@ -97,8 +97,8 @@ jobs:
       matrix:
         navidrome: ["0.63.2", "0.64.0"]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: cantilune-ndp
           path: dist
