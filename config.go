@@ -62,13 +62,20 @@ func (s Settings) Personal() bool {
 }
 
 // situationConfig is the web UI row of a built-in situation.
+// Style and Selection replace the fields Preset and Mode of earlier versions,
+// which are only used while the settings have not been saved again.
 type situationConfig struct {
 	Enabled    *bool  `json:"enabled"`
+	Style      string `json:"style"`
+	Selection  string `json:"selection"`
 	Preset     string `json:"preset"`
 	Mode       string `json:"mode"`
 	TrackCount int    `json:"trackCount"`
 	TargetUser string `json:"targetUser"`
 }
+
+func (sc situationConfig) preset() string { return firstNonEmpty(sc.Style, sc.Preset) }
+func (sc situationConfig) mode() string   { return firstNonEmpty(sc.Selection, sc.Mode) }
 
 // customSituation is a user-defined situation.
 type customSituation struct {
@@ -219,9 +226,9 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 		if !enabled {
 			continue
 		}
-		preset, ok := sit.FindPreset(sc.Preset)
-		if !ok && sc.Preset != "" {
-			logf(pdk.LogWarn, "%s: preset %q no longer exists, using %q", sit.Name, sc.Preset, sit.PresetLabel(preset))
+		preset, ok := sit.FindPreset(sc.preset())
+		if !ok && sc.preset() != "" {
+			logf(pdk.LogWarn, "%s: preset %q no longer exists, using %q", sit.Name, sc.preset(), sit.PresetLabel(preset))
 		}
 		title := sit.DisplayName(s.Language)
 		presetName := preset.DisplayName(s.Language)
@@ -235,7 +242,7 @@ func buildJobs(cat *catalog.Catalog, s Settings) []Job {
 			PresetLabel: strings.TrimSpace(presetName + " " + sit.PresetEmoji(preset)),
 			Name:        buildPlaylistName(s.Prefix, title, variant, sit.PresetEmoji(preset)),
 			Recipe:      sit.Recipe(preset),
-			Mode:        normalizeMode(sc.Mode),
+			Mode:        normalizeMode(sc.mode()),
 			Count:       trackCount(sc.TrackCount, s.TrackCount),
 			User:        firstNonEmpty(sc.TargetUser, s.DefaultUser),
 			Public:      s.PublicPlaylists,

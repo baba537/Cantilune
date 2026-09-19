@@ -388,8 +388,8 @@ Presets are stored in the settings by their display name. If a preset is renamed
 Pushing a tag in the format `v*` starts the [release workflow](.github/workflows/release.yml). It runs the complete CI first, then builds the plugin, takes the version from the tag and attaches `cantilune.ndp`, `SHA256SUMS` and an SPDX SBOM to the release together with a signed build provenance attestation.
 
 ```bash
-git tag -a v1.3.0 -m "Cantilune 1.3.0"
-git push origin v1.3.0
+git tag -a v1.3.1 -m "Cantilune 1.3.1"
+git push origin v1.3.1
 ```
 
 Changes between versions are listed in the [changelog](CHANGELOG.md).

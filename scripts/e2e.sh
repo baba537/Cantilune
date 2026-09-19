@@ -120,9 +120,9 @@ fi
 CONFIG="$(jq -nc '{
   trackCount: 10,
   logDetails: true,
-  gym: {enabled: true, preset: "Hardstyle ⚡"},
-  lernen: {enabled: true, preset: "Classical 🎻"},
-  autoFahren: {enabled: true, preset: "HipHop 🎤"},
+  gym: {enabled: true, style: "Hardstyle ⚡"},
+  lernen: {enabled: true, style: "Classical 🎻"},
+  autoFahren: {enabled: true, style: "HipHop 🎤"},
   kochen: {enabled: false}, essen: {enabled: false}, putzen: {enabled: false},
   fokus: {enabled: false}, entspannen: {enabled: false}, schlafen: {enabled: false},
   party: {enabled: false}

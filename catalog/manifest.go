@@ -42,6 +42,15 @@ const (
 	KeyArchiveDays      = "archiveDays"
 )
 
+// Fields of a built-in situation. Version 1.0.0 stored German values under
+// "preset" and "mode", which the web UI marks as invalid and does not replace
+// with defaults. New field names let the form start from valid defaults; the
+// old fields are still read until the settings are saved again.
+const (
+	KeySituationPreset = "style"
+	KeySituationMode   = "selection"
+)
+
 // Audience values (dropdown).
 const (
 	AudienceShared   = "Shared"
@@ -201,18 +210,18 @@ func BuildManifest() ([]byte, error) {
 				{"title", label},
 				{"properties", obj{
 					{"enabled", obj{{"type", "boolean"}, {"title", label}, {"default", s.Enabled}}},
-					{"preset", obj{{"type", "string"}, {"title", "Preset"}, {"enum", labels}, {"default", labels[0]}}},
-					{"mode", obj{{"type", "string"}, {"title", "Selection"}, {"enum", Modes}, {"default", ModeBalanced}}},
+					{KeySituationPreset, obj{{"type", "string"}, {"title", "Preset"}, {"enum", labels}, {"default", labels[0]}}},
+					{KeySituationMode, obj{{"type", "string"}, {"title", "Selection"}, {"enum", Modes}, {"default", ModeBalanced}}},
 					{"trackCount", trackCountProp()},
 					{"targetUser", targetUserProp()},
 				}},
-				{"default", obj{{"enabled", s.Enabled}, {"preset", labels[0]}, {"mode", ModeBalanced}}},
+				{"default", obj{{"enabled", s.Enabled}, {KeySituationPreset, labels[0]}, {KeySituationMode, ModeBalanced}}},
 			}})
 			base := "#/properties/" + s.ID + "/properties/"
 			rows = append(rows, horizontal(
 				control(base+"enabled", kv{"label", label}),
-				control(base+"preset"),
-				control(base+"mode"),
+				control(base+KeySituationPreset),
+				control(base+KeySituationMode),
 				control(base+"trackCount"),
 				control(base+"targetUser"),
 			))

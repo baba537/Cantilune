@@ -44,7 +44,7 @@ func onlyEnabled(cat *catalog.Catalog, presets map[string]string) map[string]str
 	cfg := map[string]string{}
 	for _, s := range cat.Situations {
 		preset, on := presets[s.ID]
-		b, _ := json.Marshal(map[string]any{"enabled": on, "preset": preset})
+		b, _ := json.Marshal(map[string]any{"enabled": on, "style": preset})
 		cfg[s.ID] = string(b)
 	}
 	return cfg
@@ -298,6 +298,17 @@ func TestLegacyGermanSettings(t *testing.T) {
 	}
 	if c := jobs[1]; c.Recipe.Energy != catalog.EnergyHigh || c.Recipe.Flow != catalog.FlowRising || c.Mode != catalog.ModeDiscover {
 		t.Errorf("legacy custom situation not migrated: %+v", c)
+	}
+}
+
+// Once the form is saved, the new fields win over values of version 1.0.0.
+func TestNewSituationFieldsOverrideLegacyFields(t *testing.T) {
+	cat := mustCatalog(t)
+	cfg := onlyEnabled(cat, map[string]string{"lernen": ""})
+	cfg["lernen"] = `{"enabled":true,"preset":"Klassik 🎻","mode":"Lieblingssongs","style":"Lo-Fi ☕","selection":"Discover"}`
+	jobs := buildJobs(cat, loadSettings(mapConfig(cfg), cat))
+	if len(jobs) != 1 || jobs[0].Name != "🎧 Studying Lo-Fi ☕" || jobs[0].Mode != catalog.ModeDiscover {
+		t.Fatalf("new fields ignored: %+v", jobs)
 	}
 }
 

@@ -196,7 +196,7 @@
               "title": "Gym 💪",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -209,7 +209,7 @@
               ],
               "default": "Mix 💪"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -235,8 +235,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 💪",
-            "mode": "Balanced"
+            "style": "Mix 💪",
+            "selection": "Balanced"
           }
         },
         "laufen": {
@@ -248,7 +248,7 @@
               "title": "Running 🏃",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -260,7 +260,7 @@
               ],
               "default": "Mix 🏃"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -286,8 +286,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🏃",
-            "mode": "Balanced"
+            "style": "Mix 🏃",
+            "selection": "Balanced"
           }
         },
         "radfahren": {
@@ -299,7 +299,7 @@
               "title": "Cycling 🚴",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -310,7 +310,7 @@
               ],
               "default": "Mix 🚴"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -336,8 +336,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🚴",
-            "mode": "Balanced"
+            "style": "Mix 🚴",
+            "selection": "Balanced"
           }
         },
         "yoga": {
@@ -349,7 +349,7 @@
               "title": "Yoga & Meditation 🧘",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -360,7 +360,7 @@
               ],
               "default": "Ambient 🌌"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -386,8 +386,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Ambient 🌌",
-            "mode": "Balanced"
+            "style": "Ambient 🌌",
+            "selection": "Balanced"
           }
         },
         "wandern": {
@@ -399,7 +399,7 @@
               "title": "Walking & Hiking 🥾",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -410,7 +410,7 @@
               ],
               "default": "Mix 🥾"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -436,8 +436,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🥾",
-            "mode": "Balanced"
+            "style": "Mix 🥾",
+            "selection": "Balanced"
           }
         },
         "autoFahren": {
@@ -449,7 +449,7 @@
               "title": "Driving 🚗",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -462,7 +462,7 @@
               ],
               "default": "Mix 🚗"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -488,8 +488,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🚗",
-            "mode": "Balanced"
+            "style": "Mix 🚗",
+            "selection": "Balanced"
           }
         },
         "roadtrip": {
@@ -501,7 +501,7 @@
               "title": "Road Trip 🛣️",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -512,7 +512,7 @@
               ],
               "default": "Classics 🎸"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -538,8 +538,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Classics 🎸",
-            "mode": "Balanced"
+            "style": "Classics 🎸",
+            "selection": "Balanced"
           }
         },
         "pendeln": {
@@ -551,7 +551,7 @@
               "title": "Commute 🚆",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -562,7 +562,7 @@
               ],
               "default": "Mix 🚆"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -588,8 +588,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🚆",
-            "mode": "Balanced"
+            "style": "Mix 🚆",
+            "selection": "Balanced"
           }
         },
         "nachtfahrt": {
@@ -601,7 +601,7 @@
               "title": "Night Drive 🌃",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -611,7 +611,7 @@
               ],
               "default": "Synthwave 🌆"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -637,8 +637,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Synthwave 🌆",
-            "mode": "Balanced"
+            "style": "Synthwave 🌆",
+            "selection": "Balanced"
           }
         },
         "kochen": {
@@ -650,7 +650,7 @@
               "title": "Cooking 🍳",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -662,7 +662,7 @@
               ],
               "default": "Mix 🍳"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -688,8 +688,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🍳",
-            "mode": "Balanced"
+            "style": "Mix 🍳",
+            "selection": "Balanced"
           }
         },
         "essen": {
@@ -701,7 +701,7 @@
               "title": "Mealtime 🍽️",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -712,7 +712,7 @@
               ],
               "default": "Jazz 🎷"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -738,8 +738,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Jazz 🎷",
-            "mode": "Balanced"
+            "style": "Jazz 🎷",
+            "selection": "Balanced"
           }
         },
         "fruehstueck": {
@@ -751,7 +751,7 @@
               "title": "Breakfast ☕",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -762,7 +762,7 @@
               ],
               "default": "Acoustic 🪕"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -788,8 +788,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Acoustic 🪕",
-            "mode": "Balanced"
+            "style": "Acoustic 🪕",
+            "selection": "Balanced"
           }
         },
         "aufwachen": {
@@ -801,7 +801,7 @@
               "title": "Waking Up 🌅",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -811,7 +811,7 @@
               ],
               "default": "Good Mood ☀️"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -837,8 +837,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Good Mood ☀️",
-            "mode": "Balanced"
+            "style": "Good Mood ☀️",
+            "selection": "Balanced"
           }
         },
         "putzen": {
@@ -850,7 +850,7 @@
               "title": "Cleaning 🧹",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -862,7 +862,7 @@
               ],
               "default": "Mix 🧹"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -888,8 +888,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🧹",
-            "mode": "Balanced"
+            "style": "Mix 🧹",
+            "selection": "Balanced"
           }
         },
         "duschen": {
@@ -901,7 +901,7 @@
               "title": "Shower 🚿",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -911,7 +911,7 @@
               ],
               "default": "Sing-Along 🎤"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -937,8 +937,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Sing-Along 🎤",
-            "mode": "Balanced"
+            "style": "Sing-Along 🎤",
+            "selection": "Balanced"
           }
         },
         "garten": {
@@ -950,7 +950,7 @@
               "title": "Garden & DIY 🔨",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -961,7 +961,7 @@
               ],
               "default": "Mix 🔨"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -987,8 +987,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🔨",
-            "mode": "Balanced"
+            "style": "Mix 🔨",
+            "selection": "Balanced"
           }
         },
         "gaming": {
@@ -1000,7 +1000,7 @@
               "title": "Gaming 🎮",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1011,7 +1011,7 @@
               ],
               "default": "Soundtrack 🎬"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1037,8 +1037,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Soundtrack 🎬",
-            "mode": "Balanced"
+            "style": "Soundtrack 🎬",
+            "selection": "Balanced"
           }
         },
         "lesen": {
@@ -1050,7 +1050,7 @@
               "title": "Reading 📖",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1061,7 +1061,7 @@
               ],
               "default": "Classical 🎻"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1087,8 +1087,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Classical 🎻",
-            "mode": "Balanced"
+            "style": "Classical 🎻",
+            "selection": "Balanced"
           }
         },
         "lernen": {
@@ -1100,7 +1100,7 @@
               "title": "Studying 📚",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1112,7 +1112,7 @@
               ],
               "default": "Mix 📚"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1138,8 +1138,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 📚",
-            "mode": "Balanced"
+            "style": "Mix 📚",
+            "selection": "Balanced"
           }
         },
         "fokus": {
@@ -1151,7 +1151,7 @@
               "title": "Work & Focus 🎯",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1163,7 +1163,7 @@
               ],
               "default": "Mix 🎯"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1189,8 +1189,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🎯",
-            "mode": "Balanced"
+            "style": "Mix 🎯",
+            "selection": "Balanced"
           }
         },
         "kreativ": {
@@ -1202,7 +1202,7 @@
               "title": "Creative 🎨",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1213,7 +1213,7 @@
               ],
               "default": "Mix 🎨"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1239,8 +1239,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix 🎨",
-            "mode": "Balanced"
+            "style": "Mix 🎨",
+            "selection": "Balanced"
           }
         },
         "entspannen": {
@@ -1252,7 +1252,7 @@
               "title": "Relax 🛋️",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1264,7 +1264,7 @@
               ],
               "default": "Mix 🛋️"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1290,8 +1290,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🛋️",
-            "mode": "Balanced"
+            "style": "Mix 🛋️",
+            "selection": "Balanced"
           }
         },
         "schlafen": {
@@ -1303,7 +1303,7 @@
               "title": "Sleep 😴",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1314,7 +1314,7 @@
               ],
               "default": "Ambient 🌌"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1340,8 +1340,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Ambient 🌌",
-            "mode": "Balanced"
+            "style": "Ambient 🌌",
+            "selection": "Balanced"
           }
         },
         "regentag": {
@@ -1353,7 +1353,7 @@
               "title": "Rainy Day 🌧️",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1363,7 +1363,7 @@
               ],
               "default": "Melancholy 🌧️"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1389,8 +1389,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Melancholy 🌧️",
-            "mode": "Balanced"
+            "style": "Melancholy 🌧️",
+            "selection": "Balanced"
           }
         },
         "party": {
@@ -1402,7 +1402,7 @@
               "title": "Party 🎉",
               "default": true
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1415,7 +1415,7 @@
               ],
               "default": "Mix 🎉"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1441,8 +1441,8 @@
           },
           "default": {
             "enabled": true,
-            "preset": "Mix 🎉",
-            "mode": "Balanced"
+            "style": "Mix 🎉",
+            "selection": "Balanced"
           }
         },
         "dinner": {
@@ -1454,7 +1454,7 @@
               "title": "Dinner Party 🥂",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1465,7 +1465,7 @@
               ],
               "default": "Jazz 🎷"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1491,8 +1491,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Jazz 🎷",
-            "mode": "Balanced"
+            "style": "Jazz 🎷",
+            "selection": "Balanced"
           }
         },
         "grillen": {
@@ -1504,7 +1504,7 @@
               "title": "BBQ & Summer ☀️",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1516,7 +1516,7 @@
               ],
               "default": "Mix ☀️"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1542,8 +1542,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Mix ☀️",
-            "mode": "Balanced"
+            "style": "Mix ☀️",
+            "selection": "Balanced"
           }
         },
         "romantik": {
@@ -1555,7 +1555,7 @@
               "title": "Date Night 🌹",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1566,7 +1566,7 @@
               ],
               "default": "Soul & R&B 🎙️"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1592,8 +1592,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Soul & R&B 🎙️",
-            "mode": "Balanced"
+            "style": "Soul & R&B 🎙️",
+            "selection": "Balanced"
           }
         },
         "kinder": {
@@ -1605,7 +1605,7 @@
               "title": "With Kids 🧸",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1615,7 +1615,7 @@
               ],
               "default": "Kids Songs 🧸"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1641,8 +1641,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Kids Songs 🧸",
-            "mode": "Balanced"
+            "style": "Kids Songs 🧸",
+            "selection": "Balanced"
           }
         },
         "motivation": {
@@ -1654,7 +1654,7 @@
               "title": "Motivation 🚀",
               "default": false
             },
-            "preset": {
+            "style": {
               "type": "string",
               "title": "Preset",
               "enum": [
@@ -1665,7 +1665,7 @@
               ],
               "default": "Epic 🎬"
             },
-            "mode": {
+            "selection": {
               "type": "string",
               "title": "Selection",
               "enum": [
@@ -1691,8 +1691,8 @@
           },
           "default": {
             "enabled": false,
-            "preset": "Epic 🎬",
-            "mode": "Balanced"
+            "style": "Epic 🎬",
+            "selection": "Balanced"
           }
         },
         "customSituations": {
@@ -1982,11 +1982,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/gym/properties/preset"
+                  "scope": "#/properties/gym/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/gym/properties/mode"
+                  "scope": "#/properties/gym/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2008,11 +2008,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/laufen/properties/preset"
+                  "scope": "#/properties/laufen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/laufen/properties/mode"
+                  "scope": "#/properties/laufen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2034,11 +2034,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/radfahren/properties/preset"
+                  "scope": "#/properties/radfahren/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/radfahren/properties/mode"
+                  "scope": "#/properties/radfahren/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2060,11 +2060,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/yoga/properties/preset"
+                  "scope": "#/properties/yoga/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/yoga/properties/mode"
+                  "scope": "#/properties/yoga/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2086,11 +2086,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/wandern/properties/preset"
+                  "scope": "#/properties/wandern/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/wandern/properties/mode"
+                  "scope": "#/properties/wandern/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2118,11 +2118,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/autoFahren/properties/preset"
+                  "scope": "#/properties/autoFahren/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/autoFahren/properties/mode"
+                  "scope": "#/properties/autoFahren/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2144,11 +2144,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/roadtrip/properties/preset"
+                  "scope": "#/properties/roadtrip/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/roadtrip/properties/mode"
+                  "scope": "#/properties/roadtrip/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2170,11 +2170,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/pendeln/properties/preset"
+                  "scope": "#/properties/pendeln/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/pendeln/properties/mode"
+                  "scope": "#/properties/pendeln/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2196,11 +2196,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/nachtfahrt/properties/preset"
+                  "scope": "#/properties/nachtfahrt/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/nachtfahrt/properties/mode"
+                  "scope": "#/properties/nachtfahrt/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2228,11 +2228,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kochen/properties/preset"
+                  "scope": "#/properties/kochen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kochen/properties/mode"
+                  "scope": "#/properties/kochen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2254,11 +2254,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/essen/properties/preset"
+                  "scope": "#/properties/essen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/essen/properties/mode"
+                  "scope": "#/properties/essen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2280,11 +2280,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/fruehstueck/properties/preset"
+                  "scope": "#/properties/fruehstueck/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/fruehstueck/properties/mode"
+                  "scope": "#/properties/fruehstueck/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2306,11 +2306,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/aufwachen/properties/preset"
+                  "scope": "#/properties/aufwachen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/aufwachen/properties/mode"
+                  "scope": "#/properties/aufwachen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2332,11 +2332,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/putzen/properties/preset"
+                  "scope": "#/properties/putzen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/putzen/properties/mode"
+                  "scope": "#/properties/putzen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2358,11 +2358,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/duschen/properties/preset"
+                  "scope": "#/properties/duschen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/duschen/properties/mode"
+                  "scope": "#/properties/duschen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2384,11 +2384,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/garten/properties/preset"
+                  "scope": "#/properties/garten/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/garten/properties/mode"
+                  "scope": "#/properties/garten/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2410,11 +2410,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/gaming/properties/preset"
+                  "scope": "#/properties/gaming/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/gaming/properties/mode"
+                  "scope": "#/properties/gaming/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2436,11 +2436,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/lesen/properties/preset"
+                  "scope": "#/properties/lesen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/lesen/properties/mode"
+                  "scope": "#/properties/lesen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2468,11 +2468,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/lernen/properties/preset"
+                  "scope": "#/properties/lernen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/lernen/properties/mode"
+                  "scope": "#/properties/lernen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2494,11 +2494,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/fokus/properties/preset"
+                  "scope": "#/properties/fokus/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/fokus/properties/mode"
+                  "scope": "#/properties/fokus/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2520,11 +2520,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kreativ/properties/preset"
+                  "scope": "#/properties/kreativ/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kreativ/properties/mode"
+                  "scope": "#/properties/kreativ/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2552,11 +2552,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/entspannen/properties/preset"
+                  "scope": "#/properties/entspannen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/entspannen/properties/mode"
+                  "scope": "#/properties/entspannen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2578,11 +2578,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/schlafen/properties/preset"
+                  "scope": "#/properties/schlafen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/schlafen/properties/mode"
+                  "scope": "#/properties/schlafen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2604,11 +2604,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/regentag/properties/preset"
+                  "scope": "#/properties/regentag/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/regentag/properties/mode"
+                  "scope": "#/properties/regentag/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2636,11 +2636,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/party/properties/preset"
+                  "scope": "#/properties/party/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/party/properties/mode"
+                  "scope": "#/properties/party/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2662,11 +2662,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/dinner/properties/preset"
+                  "scope": "#/properties/dinner/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/dinner/properties/mode"
+                  "scope": "#/properties/dinner/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2688,11 +2688,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/grillen/properties/preset"
+                  "scope": "#/properties/grillen/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/grillen/properties/mode"
+                  "scope": "#/properties/grillen/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2714,11 +2714,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/romantik/properties/preset"
+                  "scope": "#/properties/romantik/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/romantik/properties/mode"
+                  "scope": "#/properties/romantik/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2740,11 +2740,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kinder/properties/preset"
+                  "scope": "#/properties/kinder/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/kinder/properties/mode"
+                  "scope": "#/properties/kinder/properties/selection"
                 },
                 {
                   "type": "Control",
@@ -2766,11 +2766,11 @@
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/motivation/properties/preset"
+                  "scope": "#/properties/motivation/properties/style"
                 },
                 {
                   "type": "Control",
-                  "scope": "#/properties/motivation/properties/mode"
+                  "scope": "#/properties/motivation/properties/selection"
                 },
                 {
                   "type": "Control",

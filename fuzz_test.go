@@ -52,7 +52,7 @@ func FuzzParseMarkers(f *testing.F) {
 }
 
 func FuzzLoadSettings(f *testing.F) {
-	f.Add("true", "50", `[{"name":"x","genres":["Rock"]}]`, `{"enabled":true,"preset":"Hardstyle ⚡"}`, "Personal")
+	f.Add("true", "50", `[{"name":"x","genres":["Rock"]}]`, `{"enabled":true,"style":"Hardstyle ⚡","selection":"Discover"}`, "Personal")
 	f.Add("", "-1", "null", "[]", "")
 	f.Add("maybe", "1e309", `[{"name":`, `{"enabled":"yes"}`, "Deutsch")
 	cat, err := catalog.Load()

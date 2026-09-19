@@ -2,6 +2,14 @@
 
 All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] – 2026-09-19
+
+### Fixed
+- Settings saved by version 1.0.0 contained German preset and selection values. The web UI marked them as invalid, did not fill in defaults and could not be saved until every field was changed by hand. Preset and selection are now stored under new field names, so the form starts from valid defaults. Old values are still used until the settings are saved again.
+
+### Changed
+- After updating, the preset and selection of every situation show their defaults in the web UI. Choices that differ from the defaults need to be selected again once; enabled situations, track counts and users are kept.
+
 ## [1.3.0] – 2026-09-15
 
 ### Added
@@ -65,6 +73,7 @@ First public release.
 - Schedule by time of day or cron expression, with immediate update after saving
 - Option to delete all generated playlists before uninstalling
 
+[1.3.1]: https://github.com/baba537/Cantilune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/baba537/Cantilune/releases/tag/v1.3.0
 [1.2.0]: https://github.com/baba537/Cantilune/releases/tag/v1.2.0
 [1.1.0]: https://github.com/baba537/Cantilune/releases/tag/v1.1.0
