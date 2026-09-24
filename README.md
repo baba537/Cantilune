@@ -26,9 +26,6 @@ The name combines *canticle* (song) and *lune* (French for moon).
 🎧 Sleep Ambient 🌌
 ```
 
-> [!NOTE]
-> Cantilune was developed with the help of Claude Opus 5 (Anthropic). The code is covered by automated tests but may still contain bugs. Please report problems and suggestions as an [issue](https://github.com/baba537/Cantilune/issues).
-
 ## Contents
 
 - [Features](#features)
@@ -45,6 +42,7 @@ The name combines *canticle* (song) and *lune* (French for moon).
 - [Development](#development)
 - [Project status](#project-status)
 - [License](#license)
+- [AI assistance](#ai-assistance)
 
 ## Features
 
@@ -64,7 +62,7 @@ The name combines *canticle* (song) and *lune* (French for moon).
 
 ## Requirements
 
-- Navidrome with plugin support (`.ndp` packages). Tested end-to-end in CI with **Navidrome 0.63.2 and 0.64.0**; older versions are not tested.
+- Navidrome with plugin support (`.ndp` packages). Tested end-to-end in CI with **Navidrome 0.63.2 and 0.64.1**, including the update from the previous Cantilune release; older versions are not tested.
 - Plugins enabled in the Navidrome configuration
 
 ## Installation
@@ -360,7 +358,7 @@ tinygo build -no-debug -o dist/plugin.wasm -target wasip1 -buildmode=c-shared .
 go run ./cmd/buildndp -version 1.3.2
 ```
 
-CI runs all of these, `govulncheck`, CodeQL, a reproducible-build check and end-to-end tests against Navidrome 0.63.2 and 0.64.0. Details: [docs/testing.md](docs/testing.md).
+CI runs all of these, `govulncheck`, CodeQL, a reproducible-build check and end-to-end tests against Navidrome 0.63.2 and 0.64.1. Details: [docs/testing.md](docs/testing.md).
 
 ### Adding presets
 
@@ -396,18 +394,22 @@ Presets are stored in the settings by their display name. If a preset is renamed
 Pushing a tag in the format `v*` starts the [release workflow](.github/workflows/release.yml). It runs the complete CI first, then builds the plugin, takes the version from the tag and attaches `cantilune.ndp`, `SHA256SUMS` and an SPDX SBOM to the release together with a signed build provenance attestation.
 
 ```bash
-git tag -a v1.3.1 -m "Cantilune 1.3.1"
-git push origin v1.3.1
+git tag -a v1.3.2 -m "Cantilune 1.3.2"
+git push origin v1.3.2
 ```
 
 Changes between versions are listed in the [changelog](CHANGELOG.md).
 
 ## Project status
 
-Cantilune is maintained in free time by [@baba537](https://github.com/baba537). Bug reports, preset suggestions and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). No external security audit has been performed.
+Cantilune is maintained in free time. Bug reports, preset suggestions and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). No external security audit has been performed.
 
 ## License
 
 Cantilune is licensed under the [GPL-3.0](LICENSE). The Navidrome Plugin Development Kit, which is compiled into `plugin.wasm`, is also licensed under the GPL-3.0.
 
 The logo was created with ChatGPT.
+
+## AI assistance
+
+Parts of this project were created with AI assistance (Claude Opus 5). The code is covered by automated tests but may still contain bugs; please report problems as an [issue](https://github.com/baba537/Cantilune/issues).

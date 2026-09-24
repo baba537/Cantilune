@@ -41,7 +41,7 @@ fail() {
   if [[ -f "$WORK/navidrome.log" ]]; then
     echo "--- last 80 lines of the Navidrome log ---" >&2
     tail -n 80 "$WORK/navidrome.log" >&2
-    tail_log="$(grep -iE 'error|warn|plugin|cantilune' "$WORK/navidrome.log" | tail -n 15 | cut -c1-300 | sed ':a;N;$!ba;s/\n/%0A/g')"
+    tail_log="$(grep -E 'level=(error|fatal)|plugin=cantilune|[Pp]lugin|Scan' "$WORK/navidrome.log" | tail -n 20 | cut -c1-300 | sed ':a;N;$!ba;s/\n/%0A/g')"
   fi
   if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
     echo "::error title=E2E Navidrome ${ND_VERSION}::$*"
@@ -63,12 +63,16 @@ export ND_PORT="$PORT"
 export ND_ADDRESS=127.0.0.1
 export ND_LOGLEVEL=info
 export ND_ENABLEINSIGHTSCOLLECTOR=false
+# No artist lookups on external services: keeps the log readable and the test offline.
+export ND_ENABLEEXTERNALSERVICES=false
 
 api() { curl -fsS "${BASE}/rest/$1?${AUTH}${2:+&$2}"; }
 navidrome() { "$WORK/bin/navidrome" "$@"; }
 
 start_navidrome() {
-  navidrome >>"$WORK/navidrome.log" 2>&1 &
+  ! curl -fsS "${BASE}/ping" >/dev/null 2>&1 || fail "another server is already listening on port ${PORT}"
+  # Started directly (not through the navidrome function) so that $! is Navidrome's PID.
+  "$WORK/bin/navidrome" >>"$WORK/navidrome.log" 2>&1 &
   ND_PID=$!
   for _ in $(seq 1 60); do
     curl -fsS "${BASE}/ping" >/dev/null 2>&1 && return 0
@@ -81,6 +85,11 @@ stop_navidrome() {
   kill "$ND_PID"
   wait "$ND_PID" 2>/dev/null || true
   ND_PID=""
+  for _ in $(seq 1 30); do
+    curl -fsS "${BASE}/ping" >/dev/null 2>&1 || return 0
+    sleep 1
+  done
+  fail "Navidrome did not stop"
 }
 
 generation_runs() { grep -c "generation finished" "$WORK/navidrome.log" || true; }

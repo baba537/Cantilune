@@ -25,7 +25,7 @@ Requirements:
 | `make fuzz` | Run every fuzz target for 15 seconds |
 | `make bench` | Benchmarks and the load profile (100,000 songs, 10 users) |
 | `make checksums` | Build `dist/cantilune.ndp` and write checksums |
-| `bash scripts/e2e.sh 0.64.0` | End-to-end test against a real Navidrome (Linux, needs `ffmpeg`, `curl`, `jq`, `python3`) |
+| `bash scripts/e2e.sh 0.64.1` | End-to-end test against a real Navidrome (Linux, needs `ffmpeg`, `curl`, `jq`, `python3`) |
 
 See [docs/testing.md](docs/testing.md) for what each test layer covers.
 
@@ -53,6 +53,6 @@ Contributions are accepted under the [GPL-3.0](LICENSE), the license of the proj
 
 ## Maintenance
 
-Cantilune is maintained by [@baba537](https://github.com/baba537) in free time. There is no funding and no guaranteed response time.
+Cantilune is maintained in free time. There is no funding and no guaranteed response time.
 
 The project does not lock users in: playlists are regular Navidrome playlists, all data stays in the user's Navidrome installation, and the [uninstall option](README.md#uninstalling) removes everything the plugin created. Because the code is licensed under the GPL-3.0, anyone can fork and continue the project. If Cantilune is no longer maintained, the repository will be archived with a note in the README.
