@@ -15,7 +15,7 @@ All notable changes to Cantilune. The format is based on [Keep a Changelog](http
 
 ### Documentation
 - Updating: Navidrome disables a plugin whose file has changed. Settings are kept; enable Cantilune again after replacing the file.
-- Why Windows builds are not byte-identical to Linux builds (different LLVM versions in the TinyGo release archives).
+- Where Windows builds differ from Linux builds (the Binaryen optimization step), so that reproducibility is only promised for Linux.
 
 ## [1.3.1] – 2026-09-19
 
