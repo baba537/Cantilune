@@ -75,6 +75,7 @@ func newGenerator(cat *catalog.Catalog, cfg Settings, startup bool) *generator {
 }
 
 func (g *generator) run() error {
+	start := time.Now()
 	g.loadAllowedUsers()
 
 	base := buildJobs(g.cat, g.cfg)
@@ -178,15 +179,15 @@ func (g *generator) run() error {
 	}
 
 	if g.cfg.DryRun {
-		logf(pdk.LogInfo, "preview finished: %d playlists previewed, %d failed. Disable \"Preview only\" to create them.", previewed, failed)
+		logf(pdk.LogInfo, "preview finished: %d playlists previewed, %d failed in %s. Disable \"Preview only\" to create them.", previewed, failed, elapsed(start))
 		return nil
 	}
 
 	removed := g.deleteOldPlaylists(idx, keepSituation, keepOwner)
 	expired := g.expireArchives(idx.archived)
 
-	logf(pdk.LogInfo, "generation finished: %d created, %d unchanged, %d removed, %d archives expired, %d failed",
-		created, unchanged, removed, expired, failed)
+	logf(pdk.LogInfo, "generation finished: %d created, %d unchanged, %d removed, %d archives expired, %d failed in %s",
+		created, unchanged, removed, expired, failed, elapsed(start))
 	if created == 0 && failed > 0 {
 		return fmt.Errorf("no playlist created, %d errors (see log)", failed)
 	}
@@ -417,6 +418,11 @@ func parseMarker(comment string) (id, fp string, ok bool) {
 }
 
 // parseArchiveMarker reads "#cla:<situation>:<YYYY-MM-DD>" from the playlist comment.
+// elapsed formats the time since start for log lines, in milliseconds.
+func elapsed(start time.Time) string {
+	return fmt.Sprintf("%d ms", time.Since(start).Milliseconds())
+}
+
 func parseArchiveMarker(comment string) (id string, date time.Time, ok bool) {
 	i := strings.LastIndex(comment, archivePrefix)
 	if i < 0 {

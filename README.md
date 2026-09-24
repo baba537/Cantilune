@@ -334,6 +334,7 @@ To regenerate all playlists immediately, delete the Cantilune playlists and save
 │   ├── legacy.go        aliases for settings saved by versions before 1.1.0
 │   └── manifest.go      settings schema and web UI layout, generates manifest.json
 ├── cmd/genmanifest/     manifest.json generator
+├── cmd/buildndp/        packs dist/cantilune.ndp reproducibly
 ├── scripts/e2e.sh       end-to-end test against a real Navidrome
 ├── docs/                algorithm, performance and testing
 ├── assets/              logo
@@ -350,6 +351,13 @@ make lint        # golangci-lint
 make fuzz        # fuzz every target for 15 seconds
 make bench       # benchmarks and load profile
 make checksums   # build dist/cantilune.ndp and SHA256SUMS
+```
+
+Without `make`:
+
+```bash
+tinygo build -no-debug -o dist/plugin.wasm -target wasip1 -buildmode=c-shared .
+go run ./cmd/buildndp -version 1.3.2
 ```
 
 CI runs all of these, `govulncheck`, CodeQL, a reproducible-build check and end-to-end tests against Navidrome 0.63.2 and 0.64.0. Details: [docs/testing.md](docs/testing.md).

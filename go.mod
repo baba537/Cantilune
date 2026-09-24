@@ -2,7 +2,7 @@ module cantilune
 
 go 1.25.0
 
-require github.com/navidrome/navidrome/plugins/pdk/go v0.0.0-20260913150356-d00c84716bbc
+require github.com/navidrome/navidrome/plugins/pdk/go v0.0.0-20260923224211-101145742f47
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

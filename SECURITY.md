@@ -92,11 +92,13 @@ gh attestation verify cantilune.ndp -R baba537/Cantilune
 **Rebuild from source:** the build is reproducible with the pinned toolchain on Linux x86-64. CI builds every commit twice from a clean cache and compares the checksums.
 
 ```bash
-git checkout v1.3.0
-make checksums VERSION=1.3.0 WEBSITE=https://github.com/baba537/Cantilune
+git checkout v1.3.2
+make checksums VERSION=1.3.2 WEBSITE=https://github.com/baba537/Cantilune
 ```
 
-Use the Go version named in the attestation (the latest Go 1.26 patch release at release time), TinyGo 0.42.0 and Binaryen version 132. `dist/plugin.wasm` then matches the checksum in `SHA256SUMS`. `dist/cantilune.ndp` also matches when it is packed with the same `zip` and `jq` as the release (Ubuntu 24.04 GitHub runner). Builds on Windows or macOS work, but are not byte-identical to the Linux build.
+Use the Go version named in the attestation (the latest Go 1.26 patch release at release time), TinyGo 0.42.0 and Binaryen version 132. `dist/plugin.wasm` and `dist/cantilune.ndp` then match the checksums in `SHA256SUMS`. The package is written by `cmd/buildndp` with fixed entry order and dates, so it does not depend on the installed `zip`.
+
+Builds on Windows or macOS work, but are not byte-identical to the Linux build: the TinyGo release archives for these platforms are linked against a newer LLVM, which enables additional WebAssembly features (`bulk-memory-opt`, `call-indirect-overlong`) and generates different code. Compare the `target_features` section of both files to see the difference.
 
 ## Security reviews
 

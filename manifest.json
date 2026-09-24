@@ -1,6 +1,6 @@
 {
   "name": "Cantilune",
-  "author": "baba537",
+  "author": "Cantilune contributors",
   "version": "0.0.0-dev",
   "description": "Creates daily playlists for 30 everyday situations (gym, driving, cooking, studying, sleep …) with selectable presets and a song selection based on genre, BPM, ReplayGain, favorites, ratings and listening history.",
   "website": "https://github.com/baba537/Cantilune",
@@ -2909,7 +2909,7 @@
       "reason": "Regenerate playlists daily at the configured time"
     },
     "kvstore": {
-      "reason": "Remember songs from recent days so playlists do not repeat",
+      "reason": "Remember recent songs and playlist edits so playlists do not repeat and follow your changes",
       "maxSize": "10MB"
     }
   }

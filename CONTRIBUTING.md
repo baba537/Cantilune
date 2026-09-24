@@ -15,7 +15,7 @@ Requirements:
 - [Go](https://go.dev/dl/) 1.25 or later (CI uses the latest 1.26 release)
 - [TinyGo](https://tinygo.org/getting-started/install/) 0.42.0 and `wasm-opt` from [Binaryen](https://github.com/WebAssembly/binaryen/releases) version 132, only for building the plugin
 - [golangci-lint](https://golangci-lint.run/) v2.13 for linting
-- `make`, `jq`, `zip` for packaging
+- `make` (optional; every target is a single command you can also run directly)
 
 | Command | Purpose |
 |---|---|

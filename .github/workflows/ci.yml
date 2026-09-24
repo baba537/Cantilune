@@ -19,16 +19,16 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
       - name: golangci-lint (WebAssembly target)
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         env:
           GOOS: wasip1
           GOARCH: wasm
@@ -39,8 +39,8 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
       - name: go.mod and go.sum are tidy
@@ -64,11 +64,11 @@ jobs:
     name: Build (reproducible)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.26.x"
-      - uses: acifani/setup-tinygo@v2
+      - uses: acifani/setup-tinygo@v3
         with:
           tinygo-version: ${{ env.TINYGO_VERSION }}
           binaryen-version: ${{ env.BINARYEN_VERSION }}
@@ -80,8 +80,8 @@ jobs:
           make checksums VERSION="0.0.0-ci.${GITHUB_SHA::7}" WEBSITE="${{ github.server_url }}/${{ github.repository }}"
           diff first.sha256 dist/SHA256SUMS
           { echo '### Reproducible build'; echo '```'; cat dist/SHA256SUMS; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          echo "::notice title=Reproducible build ($(go version | cut -d' ' -f3), TinyGo ${TINYGO_VERSION})::$(paste -sd ';' dist/SHA256SUMS)"
-      - uses: actions/upload-artifact@v5
+          echo "::notice title=Reproducible build ($(go version | cut -d' ' -f3), $(tinygo version | sed 's/ (using.*LLVM version / LLVM /; s/)$//'))::$(paste -sd ';' dist/SHA256SUMS)"
+      - uses: actions/upload-artifact@v7
         with:
           name: cantilune-ndp
           path: |
@@ -89,20 +89,28 @@ jobs:
             dist/SHA256SUMS
 
   e2e:
-    name: E2E Navidrome ${{ matrix.navidrome }}
+    name: E2E Navidrome ${{ matrix.navidrome }}${{ matrix.update && ' (update)' || '' }}
     needs: build
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        navidrome: ["0.63.2", "0.64.0"]
+        include:
+          - navidrome: "0.63.2"
+          - navidrome: "0.64.1"
+          # install the latest release first, then update to this build
+          - navidrome: "0.64.1"
+            update: true
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           name: cantilune-ndp
           path: dist
       - name: Install ffmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Download the latest release
+        if: matrix.update
+        run: curl -fsSL -o previous.ndp "${{ github.server_url }}/${{ github.repository }}/releases/latest/download/cantilune.ndp"
       - name: Run end-to-end test
-        run: bash scripts/e2e.sh "${{ matrix.navidrome }}" dist/cantilune.ndp
+        run: bash scripts/e2e.sh "${{ matrix.navidrome }}" dist/cantilune.ndp ${{ matrix.update && 'previous.ndp' || '' }}

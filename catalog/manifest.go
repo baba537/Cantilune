@@ -8,7 +8,7 @@ import (
 // Manifest metadata.
 const (
 	PluginName        = "Cantilune"
-	PluginAuthor      = "baba537"
+	PluginAuthor      = "Cantilune contributors"
 	PluginWebsite     = "https://github.com/baba537/Cantilune"
 	PluginDescription = "Creates daily playlists for 30 everyday situations (gym, driving, cooking, studying, sleep …) with selectable presets and a song selection based on genre, BPM, ReplayGain, favorites, ratings and listening history."
 )
@@ -141,8 +141,17 @@ func targetUserProp() obj {
 	return obj{{"type", "string"}, {"title", "User"}, {"description", "empty = default owner"}}
 }
 
+// DevVersion is the version in the committed manifest.json; release builds
+// replace it through BuildManifestFor.
+const DevVersion = "0.0.0-dev"
+
 // BuildManifest generates the complete content of manifest.json.
 func BuildManifest() ([]byte, error) {
+	return BuildManifestFor(DevVersion, PluginWebsite)
+}
+
+// BuildManifestFor generates manifest.json with the given version and website.
+func BuildManifestFor(version, website string) ([]byte, error) {
 	c, err := Load()
 	if err != nil {
 		return nil, err
@@ -282,9 +291,9 @@ func BuildManifest() ([]byte, error) {
 	manifest := obj{
 		{"name", PluginName},
 		{"author", PluginAuthor},
-		{"version", "0.0.0-dev"},
+		{"version", version},
 		{"description", PluginDescription},
-		{"website", PluginWebsite},
+		{"website", website},
 		{"config", obj{
 			{"schema", obj{{"type", "object"}, {"properties", props}}},
 			{"uiSchema", obj{{"type", "VerticalLayout"}, {"elements", ui}}},
@@ -293,7 +302,7 @@ func BuildManifest() ([]byte, error) {
 			{"subsonicapi", obj{{"reason", "Read songs and their metadata (getRandomSongs, getGenres, getPlaylist) and create, publish and replace Cantilune playlists"}}},
 			{"users", obj{{"reason", "Perform Subsonic API calls on behalf of the configured playlist owners"}}},
 			{"scheduler", obj{{"reason", "Regenerate playlists daily at the configured time"}}},
-			{"kvstore", obj{{"reason", "Remember songs from recent days so playlists do not repeat"}, {"maxSize", "10MB"}}},
+			{"kvstore", obj{{"reason", "Remember recent songs and playlist edits so playlists do not repeat and follow your changes"}, {"maxSize", "10MB"}}},
 		}},
 	}
 

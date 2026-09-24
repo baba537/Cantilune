@@ -38,16 +38,7 @@ build:
 
 # The file name determines the plugin ID in Navidrome, so it is always cantilune.ndp (without version).
 package: build
-	@if command -v jq >/dev/null 2>&1; then \
-		jq --arg v "$(or $(VERSION),0.0.0-dev)" --arg w "$(WEBSITE)" \
-			'.version = $$v | if $$w != "" then .website = $$w else . end' \
-			manifest.json > $(DIST)/manifest.json; \
-	else \
-		cp manifest.json $(DIST)/manifest.json; \
-	fi
-	touch -d @$(SOURCE_DATE_EPOCH) $(DIST)/manifest.json $(DIST)/plugin.wasm
-	cd $(DIST) && rm -f $(PLUGIN).ndp && TZ=UTC zip -X -D -q $(PLUGIN).ndp manifest.json plugin.wasm
-	@echo "Package created: $(DIST)/$(PLUGIN).ndp"
+	go run ./cmd/buildndp -dist $(DIST) -version "$(or $(VERSION),0.0.0-dev)" -website "$(WEBSITE)" -epoch $(SOURCE_DATE_EPOCH)
 
 checksums: package
 	cd $(DIST) && sha256sum $(PLUGIN).ndp plugin.wasm > SHA256SUMS && cat SHA256SUMS
