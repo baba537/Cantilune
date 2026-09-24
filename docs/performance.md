@@ -31,14 +31,18 @@ Allocations are short-lived: the candidate pool of one playlist is released befo
 
 ## End-to-end with a real Navidrome
 
-CI installs Navidrome 0.63.2 and 0.64.0, generates a library of 90 songs and lets the plugin create three playlists.
+These numbers are measured inside Navidrome, with the plugin compiled to WebAssembly. The plugin logs the duration of every run (`generation finished: … in 114 ms`).
 
-| Measurement | Result |
-|---|---|
-| Time from enabling the plugin until generation finished | 16 s, of which 15 s are the intentional delay after startup |
-| Slowest Navidrome `ping` response while playlists were generated | 1–2 ms |
+CI installs Navidrome 0.63.2 and 0.64.1, generates a library of 1,590 songs (90 tagged test songs and 1,500 songs of ten other genres) and lets the plugin create three playlists.
 
-The plugin runs in Navidrome's scheduler callback. Navidrome kept answering requests without noticeable delay during generation.
+| Measurement | Navidrome 0.63.2 | Navidrome 0.64.1 |
+|---|---|---|
+| Generation run, 3 playlists (WebAssembly) | 126 ms | 114 ms |
+| Slowest Navidrome `ping` response during generation | 3 ms | 3 ms |
+
+A manual run with Navidrome 0.64.1 on Windows (Ryzen 7 5800X3D, 1,524 songs) created 4 playlists and checked 7 unchanged ones in 310 ms.
+
+The first run starts about 15 seconds after Navidrome or the plugin starts; this delay is intentional. The plugin runs in Navidrome's scheduler callback, and Navidrome kept answering requests without noticeable delay during generation.
 
 ## Limits
 

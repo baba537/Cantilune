@@ -12,8 +12,9 @@
 #
 # With previous.ndp (for example the latest release), that version is
 # installed and configured first and then replaced by cantilune.ndp, the way
-# users update. The test then checks that the settings are kept, the plugin
-# stays enabled and every playlist exists exactly once.
+# users update. Navidrome disables a plugin whose file changed; the test checks
+# that the settings are kept, enables it again and checks that every playlist
+# exists exactly once.
 #
 # E2E_EXTRA_SONGS (default 1500) adds songs of unrelated genres so that the
 # measured generation time reflects a library of realistic size.
@@ -219,12 +220,22 @@ update_line=""
 if [[ -n "$PREVIOUS_NDP" ]]; then
   log "Updating the plugin file to the new version"
   cp "$NDP" "$ND_PLUGINS_FOLDER/cantilune.ndp"
+  # Navidrome disables a plugin whose file changed until an admin enables it again.
+  start_navidrome
+  for _ in $(seq 1 30); do
+    grep -q "Plugin file changed" "$WORK/navidrome.log" && break
+    sleep 1
+  done
+  grep -q "Plugin file changed" "$WORK/navidrome.log" || fail "Navidrome did not detect the updated plugin file"
+  stop_navidrome
+  navidrome plugin info cantilune --format json | grep -q "Hardstyle" || fail "settings lost after the update"
+  navidrome plugin enable cantilune
   start_navidrome
   wait_generation 2
   check_all_playlists
   update_line="$(last_generation_line)"
   stop_navidrome
-  echo "ok: plugin still enabled after the update, playlists unique (${update_line})"
+  echo "ok: update kept the settings, playlists unique after enabling again (${update_line})"
 fi
 
 log "Exporting the configuration"

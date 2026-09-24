@@ -29,7 +29,7 @@ Every push and pull request runs the [CI workflow](../.github/workflows/ci.yml).
 6. Checks that the explanation log lines exist and that the configuration can be exported with `navidrome plugin info cantilune --format json`.
 7. Enables the cleanup option and checks that all Cantilune playlists are removed.
 
-**Update test:** with a third argument (`scripts/e2e.sh 0.64.1 dist/cantilune.ndp previous.ndp`), the previous version is installed and configured first. After its playlists exist, the package file is replaced by the new build and Navidrome is restarted, the way users update. The test checks that the plugin stays enabled, the settings are kept and every playlist still exists exactly once. CI runs this with the latest published release.
+**Update test:** with a third argument (`scripts/e2e.sh 0.64.1 dist/cantilune.ndp previous.ndp`), the previous version is installed and configured first. After its playlists exist, the package file is replaced by the new build and Navidrome is restarted, the way users update. Navidrome then disables the plugin because its file changed; the test checks that this is detected, that the settings are kept, enables the plugin again and checks that every playlist still exists exactly once. CI runs this with the latest published release.
 
 The matrix covers Navidrome 0.63.2 and 0.64.1 plus the update test on 0.64.1. Navidrome 0.62 and older lack the plugin CLI commands the test relies on, so they are not tested.
 

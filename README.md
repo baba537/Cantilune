@@ -69,7 +69,7 @@ The name combines *canticle* (song) and *lune* (French for moon).
 
 1. Download `cantilune.ndp` from the [latest release](https://github.com/baba537/Cantilune/releases/latest). To verify the download, see [Verifying a release](SECURITY.md#verifying-a-release).
 
-2. Copy the file into Navidrome's plugin folder. When updating, replace the existing file; settings are kept.
+2. Copy the file into Navidrome's plugin folder. When updating, replace the existing file. Settings and user access are kept, but Navidrome disables a plugin whose file has changed, so enable Cantilune again after the update (step 4).
 
    | Installation | Path |
    |---|---|

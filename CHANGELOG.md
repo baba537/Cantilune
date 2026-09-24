@@ -2,6 +2,21 @@
 
 All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.2] – 2026-09-24
+
+### Added
+- The log line at the end of a run shows how long the run took.
+- End-to-end tests now update from the previous release to the new build and use a library of 1,590 songs; Navidrome 0.64.1 is tested.
+
+### Changed
+- The package is built by a small Go program (`cmd/buildndp`) instead of `zip` and `jq`, so it can be built and reproduced on any platform with Go and TinyGo.
+- The manifest names "Cantilune contributors" as author.
+- Updated GitHub Actions and the Navidrome plugin PDK.
+
+### Documentation
+- Updating: Navidrome disables a plugin whose file has changed. Settings are kept; enable Cantilune again after replacing the file.
+- Why Windows builds are not byte-identical to Linux builds (different LLVM versions in the TinyGo release archives).
+
 ## [1.3.1] – 2026-09-19
 
 ### Fixed
@@ -73,6 +88,7 @@ First public release.
 - Schedule by time of day or cron expression, with immediate update after saving
 - Option to delete all generated playlists before uninstalling
 
+[1.3.2]: https://github.com/baba537/Cantilune/releases/tag/v1.3.2
 [1.3.1]: https://github.com/baba537/Cantilune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/baba537/Cantilune/releases/tag/v1.3.0
 [1.2.0]: https://github.com/baba537/Cantilune/releases/tag/v1.2.0
