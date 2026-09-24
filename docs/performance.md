@@ -37,8 +37,8 @@ CI installs Navidrome 0.63.2 and 0.64.1, generates a library of 1,590 songs (90 
 
 | Measurement | Navidrome 0.63.2 | Navidrome 0.64.1 |
 |---|---|---|
-| Generation run, 3 playlists (WebAssembly) | 126 ms | 114 ms |
-| Slowest Navidrome `ping` response during generation | 3 ms | 3 ms |
+| Generation run, 3 playlists (WebAssembly) | 126–127 ms | 83–119 ms |
+| Slowest Navidrome `ping` response during generation | 3 ms | 1–3 ms |
 
 A manual run with Navidrome 0.64.1 on Windows (Ryzen 7 5800X3D, 1,524 songs) created 4 playlists and checked 7 unchanged ones in 310 ms.
 

@@ -98,7 +98,7 @@ make checksums VERSION=1.3.2 WEBSITE=https://github.com/baba537/Cantilune
 
 Use the Go version named in the attestation (the latest Go 1.26 patch release at release time), TinyGo 0.42.0 and Binaryen version 132. `dist/plugin.wasm` and `dist/cantilune.ndp` then match the checksums in `SHA256SUMS`. The package is written by `cmd/buildndp` with fixed entry order and dates, so it does not depend on the installed `zip`.
 
-Builds on Windows or macOS work, but are not byte-identical to the Linux build. Clang/LLVM and TinyGo report the same versions on both platforms; the difference is introduced in the Binaryen (`wasm-opt`) step. The Windows file declares two additional WebAssembly features (`bulk-memory-opt`, `call-indirect-overlong`) in its `target_features` section, and fewer functions are merged. The CI log names the exact `wasm-opt` it used.
+Builds on Windows or macOS work, but are not byte-identical to the Linux build. TinyGo, Clang/LLVM and Binaryen report the same versions on both platforms, yet the generated code differs and the Windows file declares two additional WebAssembly features (`bulk-memory-opt`, `call-indirect-overlong`) in its `target_features` section. The cause has not been identified. CI prints the exact toolchain it used.
 
 ## Security reviews
 
