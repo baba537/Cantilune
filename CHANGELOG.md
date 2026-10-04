@@ -2,6 +2,15 @@
 
 All notable changes to Cantilune. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.3] – 2026-10-05
+
+### Fixed
+- *Learn from playlist edits* could record dozens of false edits: after the option had been off for a while, or when the stored songs belonged to another playlist, every difference to the current playlist counted as removed or added by the user. Cantilune now stores the playlist ID with the generated songs, keeps them up to date even while learning is off, and only learns from the playlist they belong to.
+- A playlist whose comment merely mentioned `#cl:` could be treated as a Cantilune playlist and deleted. Markers are now only recognized with the fingerprint Cantilune writes.
+
+### Changed
+- Situations without matching songs are counted as "without matching songs" in the summary line instead of "failed", and no longer make the run end with an error.
+
 ## [1.3.2] – 2026-09-24
 
 ### Added
@@ -88,6 +97,7 @@ First public release.
 - Schedule by time of day or cron expression, with immediate update after saving
 - Option to delete all generated playlists before uninstalling
 
+[1.3.3]: https://github.com/baba537/Cantilune/releases/tag/v1.3.3
 [1.3.2]: https://github.com/baba537/Cantilune/releases/tag/v1.3.2
 [1.3.1]: https://github.com/baba537/Cantilune/releases/tag/v1.3.1
 [1.3.0]: https://github.com/baba537/Cantilune/releases/tag/v1.3.0

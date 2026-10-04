@@ -220,6 +220,11 @@ func TestParseMarker(t *testing.T) {
 		{"#cl:custom-my-list:ff00aa11", "custom-my-list", "ff00aa11", true},
 		{"Automatisch erstellt von NaviBeat · #nb:party:cafebabe", "party", "cafebabe", true},
 		{"my playlist", "", "", false},
+		// comments that only mention the marker do not make a playlist Cantilune's
+		{"notes: #cl:gym", "", "", false},
+		{"see #cl:gym:hello for details", "", "", false},
+		{"#cl:gym:1A2B3C4D", "", "", false},
+		{"#cl::1a2b3c4d", "", "", false},
 	}
 	for _, c := range cases {
 		id, fp, ok := parseMarker(c.comment)
@@ -630,8 +635,8 @@ func TestRemoveAllDeletesOnlyCantilunePlaylists(t *testing.T) {
 	cat := mustCatalog(t)
 	f := newFakeServer()
 	f.playlists = []*fakePlaylist{
-		{playlist: playlist{ID: "a", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "#cl:gym:1"}},
-		{playlist: playlist{ID: "b", Name: "🎧 Party 🎉", Owner: "bob", Comment: "#cl:party:2"}},
+		{playlist: playlist{ID: "a", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "#cl:gym:00000001"}},
+		{playlist: playlist{ID: "b", Name: "🎧 Party 🎉", Owner: "bob", Comment: "#cl:party:00000002"}},
 		{playlist: playlist{ID: "c", Name: "🎧 Cooking 🍳", Owner: "admin", Comment: "#nb:kochen:3"}},
 		{playlist: playlist{ID: "d", Name: "🎧 My own", Owner: "admin"}},
 	}
@@ -762,12 +767,12 @@ func TestNoMatchingGenreKeepsOldPlaylist(t *testing.T) {
 	f := newFakeServer()
 	f.addSongs("Hardstyle Classics", 10, nil)
 	f.playlists = []*fakePlaylist{
-		{playlist: playlist{ID: "old", Name: "🎧 Studying Classical 🎻", Owner: "admin", Comment: "#cl:lernen:x"}},
+		{playlist: playlist{ID: "old", Name: "🎧 Studying Classical 🎻", Owner: "admin", Comment: "#cl:lernen:0000000b"}},
 	}
 	useFake(t, f)
 	cfg := onlyEnabled(cat, map[string]string{"lernen": "Classical 🎻"})
-	if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false).run(); err == nil {
-		t.Error("expected an error because no playlist was created")
+	if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false).run(); err != nil {
+		t.Errorf("missing songs reported as error: %v", err)
 	}
 	if len(f.byName("🎧 Studying Classical 🎻")) != 1 {
 		t.Error("the previous playlist must not be deleted without a replacement")

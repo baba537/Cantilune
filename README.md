@@ -272,12 +272,12 @@ Cantilune uses Navidrome's key-value store (`plugins/cantilune/kvstore.db`). It 
 | Data | Kept for |
 |---|---|
 | Songs of each generated playlist per day | *Avoid repeats* + 1 day |
-| Songs of the current playlist, to detect your edits | 400 days |
+| ID and songs of the current playlist, to detect your edits | 400 days |
 | Songs you removed or added | 60 days |
 
 The store is limited to 10 MB; with 10 situations and 10 users it holds about 1 MB.
 
-Generated playlists are identified by a marker in the playlist comment (`#cl:<situation>:…`, archived playlists `#cla:…`). Other playlists are never modified, even if they use the same prefix.
+Generated playlists are identified by a marker in the playlist comment (`#cl:<situation>:<fingerprint>`, archived playlists `#cla:<situation>:<date>`). A marker only counts in exactly this form, so a comment that merely mentions `#cl:` does not make a playlist Cantilune's. Other playlists are never modified, even if they use the same prefix.
 
 ## Performance
 
@@ -304,7 +304,7 @@ After each run, Cantilune writes one line per playlist to the Navidrome log:
 | Log message | Cause and solution |
 |---|---|
 | `not in library: …` | These genres do not exist in your library; the others are still used. If none match, the log suggests similar genres. |
-| `no matching songs … The previous playlist is kept.` | Choose a different preset or check your genre tags. |
+| `no matching songs … The previous playlist is kept.` | Choose a different preset or check your genre tags. Such situations are counted as *without matching songs* in the summary line, not as failed. |
 | `filtered: genre mismatch …` | Navidrome returned songs whose genre tags do not fit the preset; they were skipped. |
 | `user "…" is not permitted for the plugin` | Allow the user under *User access* in the plugin settings. |
 | `personal playlists need at least one permitted user` | Allow users under *User access*, or switch *Playlists for* back to *Shared*. |
@@ -355,7 +355,7 @@ Without `make`:
 
 ```bash
 tinygo build -no-debug -o dist/plugin.wasm -target wasip1 -buildmode=c-shared .
-go run ./cmd/buildndp -version 1.3.2
+go run ./cmd/buildndp -version 1.3.3
 ```
 
 CI runs all of these, `govulncheck`, CodeQL, a reproducible-build check and end-to-end tests against Navidrome 0.63.2 and 0.64.1. Details: [docs/testing.md](docs/testing.md).
@@ -394,8 +394,8 @@ Presets are stored in the settings by their display name. If a preset is renamed
 Pushing a tag in the format `v*` starts the [release workflow](.github/workflows/release.yml). It runs the complete CI first, then builds the plugin, takes the version from the tag and attaches `cantilune.ndp`, `SHA256SUMS` and an SPDX SBOM to the release together with a signed build provenance attestation.
 
 ```bash
-git tag -a v1.3.2 -m "Cantilune 1.3.2"
-git push origin v1.3.2
+git tag -a v1.3.3 -m "Cantilune 1.3.3"
+git push origin v1.3.3
 ```
 
 Changes between versions are listed in the [changelog](CHANGELOG.md).

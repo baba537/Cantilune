@@ -4,12 +4,13 @@
 // Layout:
 //   - main.go       plugin entry points (OnInit, OnCallback)
 //   - config.go     reading settings, building one job per situation
-//   - generator.go  creating playlists, removing previous versions
-//   - selection.go  song selection (filtering, weighting, ordering)
-//   - genres.go     tolerant matching against library genres
-//   - history.go    history of recent days in the key-value store
+//   - generator.go  creating, replacing, archiving and cleaning up playlists
+//   - selection.go  song selection (filtering, weighting, ordering, quality)
+//   - genres.go     matching against library genres
+//   - history.go    history, generated songs and edits in the key-value store
 //   - subsonic.go   Subsonic API calls
 //   - catalog/      situations and presets (presets.json), manifest generator
+//   - cmd/          manifest generator and package builder
 package main
 
 //go:generate go run ./cmd/genmanifest

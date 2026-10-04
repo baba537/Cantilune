@@ -12,7 +12,8 @@ import (
 // and playlist owner, so personal playlists never mix data of different users.
 //
 //	hist:<situation>:<user>:<YYYY-MM-DD>  song IDs of the playlist generated that day
-//	gen:<situation>:<user>                song IDs of the current generated playlist
+//	gen:<situation>:<user>                "pl:<playlist ID>" and the song IDs of the
+//	                                      playlist Cantilune generated last
 //	fb:<situation>:<user>:<songID>        "-" removed or "+" added by the user
 //
 // All entries expire via TTL.
@@ -75,29 +76,43 @@ func (g *generator) saveHistory(situationID, user string, songIDs []string) {
 	}
 }
 
-// saveGenerated remembers the songs of the playlist Cantilune just created,
-// so edits by the user can be detected at the next run.
-func (g *generator) saveGenerated(situationID, user string, songIDs []string) {
-	if !g.cfg.LearnFromEdits {
-		return
-	}
+// playlistIDLine marks the first line of a gen: value, which holds the ID of
+// the playlist the song IDs belong to.
+const playlistIDLine = "pl:"
+
+// saveGenerated remembers the songs of the playlist Cantilune just created, so
+// edits by the user can be detected at the next run. It is saved even while
+// learning is disabled, so that enabling it later compares against the right
+// playlist.
+func (g *generator) saveGenerated(situationID, user, playlistID string, songIDs []string) {
 	key := generatedPrefix + situationID + ":" + userKey(user)
-	if err := kvSetTTL(key, joinIDs(songIDs), ttlDays(generatedDays)); err != nil {
+	value := joinIDs(append([]string{playlistIDLine + playlistID}, songIDs...))
+	if err := kvSetTTL(key, value, ttlDays(generatedDays)); err != nil {
 		logf(pdk.LogWarn, "could not save generated songs for %q: %v", situationID, err)
 	}
 }
 
 // learnFromEdits compares the songs Cantilune generated with the songs the
 // playlist contains now. Removed songs are avoided and added songs preferred
-// for feedbackDays.
-func (g *generator) learnFromEdits(situationID, user string, current map[string]bool) (removed, added int) {
+// for feedbackDays. Nothing is learned unless the stored songs belong to the
+// existing playlist; otherwise every difference would look like an edit.
+func (g *generator) learnFromEdits(situationID, user string, existing []managedPlaylist, current map[string]bool) (removed, added int) {
 	key := generatedPrefix + situationID + ":" + userKey(user)
 	values, err := kvGetMany([]string{key})
 	if err != nil || len(values[key]) == 0 {
 		return 0, 0
 	}
+	ids := splitIDs(values[key])
+	// Values written before 1.3.3 have no playlist ID and are trusted as before.
+	if len(ids) > 0 && strings.HasPrefix(ids[0], playlistIDLine) {
+		playlistID := strings.TrimPrefix(ids[0], playlistIDLine)
+		ids = ids[1:]
+		if len(existing) != 1 || existing[0].ID != playlistID {
+			return 0, 0
+		}
+	}
 	generated := map[string]bool{}
-	for _, id := range splitIDs(values[key]) {
+	for _, id := range ids {
 		generated[id] = true
 	}
 	prefix := feedbackPrefix + situationID + ":" + userKey(user) + ":"

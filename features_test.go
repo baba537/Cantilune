@@ -108,7 +108,7 @@ func TestArchiveKeepsReplacedPlaylists(t *testing.T) {
 	f := newFakeServer()
 	f.addSongs("Hardstyle", 120, nil)
 	f.playlists = []*fakePlaylist{
-		{playlist: playlist{ID: "old", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "#cl:gym:x", Created: testNow.Add(-24 * time.Hour)}, public: true},
+		{playlist: playlist{ID: "old", Name: "🎧 Gym Hardstyle ⚡", Owner: "admin", Comment: "#cl:gym:0000000a", Created: testNow.Add(-24 * time.Hour)}, public: true},
 		{playlist: playlist{ID: "archive-recent", Name: "🎧 Gym Hardstyle ⚡ (2026-09-12)", Owner: "admin", Comment: "Archived by Cantilune · #cla:gym:2026-09-12"}},
 		{playlist: playlist{ID: "archive-expired", Name: "🎧 Gym Hardstyle ⚡ (2026-09-01)", Owner: "admin", Comment: "Archived by Cantilune · #cla:gym:2026-09-01"}},
 	}
@@ -199,6 +199,53 @@ func TestLearnFromEdits(t *testing.T) {
 	}
 }
 
+// Turning learning off and on again must not treat the playlists generated in
+// between as user edits.
+func TestLearnFromEditsAfterReenabling(t *testing.T) {
+	cat := mustCatalog(t)
+	f := newFakeServer()
+	f.addSongs("Rock", 120, func(i int, s *song) { s.Artist = fmt.Sprintf("Artist %d", i) })
+	useFake(t, f)
+	defer func() { nowFn = func() time.Time { return testNow } }()
+
+	cfg := customOnly(cat, `[{"name":"Rock Test","genres":["Rock"],"trackCount":20}]`)
+	for day, learn := range []string{"true", "false", "true"} {
+		nowFn = func() time.Time { return testNow.Add(time.Duration(day) * 24 * time.Hour) }
+		cfg[catalog.KeyLearnFromEdits] = learn
+		if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false).run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false)
+	if feedback := g.loadFeedback("custom-rock-test", "admin"); len(feedback) != 0 {
+		t.Errorf("unedited playlists recorded as %d edits: %v", len(feedback), feedback)
+	}
+
+	// Stored songs of another playlist are ignored as well.
+	f.kv[generatedPrefix+"custom-rock-test:admin"] = joinIDs([]string{playlistIDLine + "gone", "rock-1", "rock-2"})
+	existing := []managedPlaylist{{playlist: playlist{ID: f.byName("🎧 Rock Test")[0].ID}}}
+	if removed, added := g.learnFromEdits("custom-rock-test", "admin", existing, map[string]bool{"rock-3": true}); removed+added != 0 {
+		t.Errorf("learned from a different playlist: %d removed, %d added", removed, added)
+	}
+}
+
+func TestMarkerNeedsFingerprint(t *testing.T) {
+	cat := mustCatalog(t)
+	f := newFakeServer()
+	f.addSongs("Hardstyle", 60, nil)
+	f.playlists = []*fakePlaylist{
+		{playlist: playlist{ID: "notes", Name: "Workout notes", Owner: "admin", Comment: "copied from #cl:party"}},
+	}
+	useFake(t, f)
+	cfg := onlyEnabled(cat, map[string]string{"gym": "Hardstyle ⚡"})
+	if err := newGenerator(cat, loadSettings(mapConfig(cfg), cat), false).run(); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.byName("Workout notes")) != 1 {
+		t.Error("a playlist that only mentions the marker was deleted")
+	}
+}
+
 func TestWeightsScaleFactorGroups(t *testing.T) {
 	cat := mustCatalog(t)
 	job := Job{Recipe: catalog.Recipe{Genres: []string{"Rock"}, MinBPM: 140, MaxBPM: 180}, Mode: catalog.ModeBalanced}
@@ -270,9 +317,13 @@ func TestEmptyLibrary(t *testing.T) {
 	cat := mustCatalog(t)
 	f := newFakeServer()
 	useFake(t, f)
-	err := newGenerator(cat, loadSettings(mapConfig(nil), cat), false).run()
-	if err == nil {
-		t.Error("expected an error when no playlist can be created")
+	// An empty library is not an error: every situation reports that no songs match.
+	logs := captureLogs(t)
+	if err := newGenerator(cat, loadSettings(mapConfig(nil), cat), false).run(); err != nil {
+		t.Errorf("empty library reported as error: %v", err)
+	}
+	if all := strings.Join(*logs, "\n"); !strings.Contains(all, "without matching songs, 0 removed") {
+		t.Errorf("summary does not count the situations without songs:\n%s", all)
 	}
 	if countCalls(f, "createPlaylist") > 0 || len(f.playlists) > 0 {
 		t.Errorf("playlists created from an empty library: %+v", f.playlists)

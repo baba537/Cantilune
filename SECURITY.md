@@ -35,7 +35,7 @@ Cantilune contains no telemetry, analytics or update checks.
 
 ### Playlists it touches
 
-Cantilune only changes or deletes playlists that carry its marker in the comment (`#cl:` for current playlists, `#cla:` for archived ones, `#nb:` for playlists of the predecessor NaviBeat) and that belong to a user the administrator permitted. Playlists created by people are never modified, even if they use the same name prefix.
+Cantilune only changes or deletes playlists that carry its marker in the comment (`#cl:<situation>:<8-digit hex fingerprint>` for current playlists, `#cla:<situation>:<date>` for archived ones, `#nb:` for playlists of the predecessor NaviBeat) and that belong to a user the administrator permitted. A comment that only mentions `#cl:` without a valid fingerprint is not treated as a marker. Playlists created by people are never modified, even if they use the same name prefix.
 
 ## Threat model
 
@@ -92,8 +92,8 @@ gh attestation verify cantilune.ndp -R baba537/Cantilune
 **Rebuild from source:** the build is reproducible with the pinned toolchain on Linux x86-64. CI builds every commit twice from a clean cache and compares the checksums.
 
 ```bash
-git checkout v1.3.2
-make checksums VERSION=1.3.2 WEBSITE=https://github.com/baba537/Cantilune
+git checkout v1.3.3
+make checksums VERSION=1.3.3 WEBSITE=https://github.com/baba537/Cantilune
 ```
 
 Use the Go version named in the attestation (the latest Go 1.26 patch release at release time), TinyGo 0.42.0 and Binaryen version 132. `dist/plugin.wasm` and `dist/cantilune.ndp` then match the checksums in `SHA256SUMS`. The package is written by `cmd/buildndp` with fixed entry order and dates, so it does not depend on the installed `zip`.

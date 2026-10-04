@@ -114,7 +114,8 @@ func (g *generator) run() error {
 	logf(pdk.LogInfo, "starting generation (%s): %d playlists, %d existing Cantilune playlists",
 		g.modeLabel(), len(ready), countManaged(idx.managed))
 
-	created, unchanged, previewed := 0, 0, 0
+	// empty: no matching songs; the previous playlist is kept, which is not an error.
+	created, unchanged, previewed, empty := 0, 0, 0, 0
 	for _, j := range ready {
 		existing := idx.forOwner(j.ID, j.User)
 		if g.startup && !g.cfg.DryRun && isUpToDate(existing, j) {
@@ -124,7 +125,7 @@ func (g *generator) run() error {
 
 		current := g.playlistSongs(existing)
 		if g.cfg.LearnFromEdits && !g.cfg.DryRun && len(existing) > 0 {
-			if removed, added := g.learnFromEdits(j.ID, j.User, current); removed+added > 0 {
+			if removed, added := g.learnFromEdits(j.ID, j.User, existing, current); removed+added > 0 {
 				logf(pdk.LogInfo, "%s for %s: learned from playlist edits (%d removed, %d added)", j.Name, j.User, removed, added)
 			}
 		}
@@ -145,7 +146,7 @@ func (g *generator) run() error {
 				hint = "; similar genres in your library: " + strings.Join(st.Similar, ", ")
 			}
 			logf(pdk.LogWarn, "%s: no matching songs (%s)%s. The previous playlist is kept.", j.Name, st.summary(0), hint)
-			failed++
+			empty++
 			continue
 		}
 
@@ -172,22 +173,22 @@ func (g *generator) run() error {
 			}
 		}
 		g.saveHistory(j.ID, j.User, ids)
-		g.saveGenerated(j.ID, j.User, ids)
+		g.saveGenerated(j.ID, j.User, id, ids)
 		created++
 		logf(pdk.LogInfo, "%s for %s: %s", j.Name, j.User, st.summary(len(ids)))
 		g.logDetails(j, st)
 	}
 
 	if g.cfg.DryRun {
-		logf(pdk.LogInfo, "preview finished: %d playlists previewed, %d failed in %s. Disable \"Preview only\" to create them.", previewed, failed, elapsed(start))
+		logf(pdk.LogInfo, "preview finished: %d playlists previewed, %d without matching songs, %d failed in %s. Disable \"Preview only\" to create them.", previewed, empty, failed, elapsed(start))
 		return nil
 	}
 
 	removed := g.deleteOldPlaylists(idx, keepSituation, keepOwner)
 	expired := g.expireArchives(idx.archived)
 
-	logf(pdk.LogInfo, "generation finished: %d created, %d unchanged, %d removed, %d archives expired, %d failed in %s",
-		created, unchanged, removed, expired, failed, elapsed(start))
+	logf(pdk.LogInfo, "generation finished: %d created, %d unchanged, %d without matching songs, %d removed, %d archives expired, %d failed in %s",
+		created, unchanged, empty, removed, expired, failed, elapsed(start))
 	if created == 0 && failed > 0 {
 		return fmt.Errorf("no playlist created, %d errors (see log)", failed)
 	}
@@ -414,15 +415,33 @@ func parseMarker(comment string) (id, fp string, ok bool) {
 	} else {
 		id = rest
 	}
-	return id, fp, id != ""
+	// Current markers always carry the fingerprint Cantilune wrote, so a comment
+	// that merely mentions "#cl:" does not make a playlist deletable.
+	if id == "" || (prefix == markerPrefix && !isFingerprint(fp)) {
+		return "", "", false
+	}
+	return id, fp, true
 }
 
-// parseArchiveMarker reads "#cla:<situation>:<YYYY-MM-DD>" from the playlist comment.
+// isFingerprint reports whether s has the format written by fingerprint().
+func isFingerprint(s string) bool {
+	if len(s) != 8 {
+		return false
+	}
+	for _, r := range s {
+		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
+			return false
+		}
+	}
+	return true
+}
+
 // elapsed formats the time since start for log lines, in milliseconds.
 func elapsed(start time.Time) string {
 	return fmt.Sprintf("%d ms", time.Since(start).Milliseconds())
 }
 
+// parseArchiveMarker reads "#cla:<situation>:<YYYY-MM-DD>" from the playlist comment.
 func parseArchiveMarker(comment string) (id string, date time.Time, ok bool) {
 	i := strings.LastIndex(comment, archivePrefix)
 	if i < 0 {
